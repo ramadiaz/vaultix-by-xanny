@@ -11,7 +11,7 @@ export default function HomePage() {
 
   return (
     <AuthGate>
-      <MobileShell title="Overview">
+      <MobileShell title="Overview" activeTab="wallets">
         {isLoading ? (
           <div className="flex h-40 items-center justify-center text-xs text-muted">
             Loading your wallets

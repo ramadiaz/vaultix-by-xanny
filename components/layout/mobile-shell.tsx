@@ -1,13 +1,17 @@
  "use client";
 
 import { ReactNode } from "react";
+import Link from "next/link";
+
+type MobileTab = "wallets" | "transactions" | "stats" | "settings";
 
 type MobileShellProps = {
   title: string;
+  activeTab: MobileTab;
   children: ReactNode;
 };
 
-export function MobileShell({ title, children }: MobileShellProps) {
+export function MobileShell({ title, activeTab, children }: MobileShellProps) {
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <header className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
@@ -25,12 +29,22 @@ export function MobileShell({ title, children }: MobileShellProps) {
 
       <nav className="sticky bottom-0 z-10 border-t border-border-subtle bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-xl items-center justify-between px-6 py-2.5 text-xs text-muted">
-          <button className="flex flex-1 flex-col items-center gap-1 rounded-full px-3 py-1 text-[11px] font-medium text-primary">
+          <Link
+            href="/"
+            className={`flex flex-1 flex-col items-center gap-1 rounded-full px-3 py-1 text-[11px] font-medium ${
+              activeTab === "wallets" ? "text-primary" : ""
+            }`}
+          >
             <span>Wallets</span>
-          </button>
-          <button className="flex flex-1 flex-col items-center gap-1 rounded-full px-3 py-1 text-[11px] font-medium">
+          </Link>
+          <Link
+            href="/transactions"
+            className={`flex flex-1 flex-col items-center gap-1 rounded-full px-3 py-1 text-[11px] font-medium ${
+              activeTab === "transactions" ? "text-primary" : ""
+            }`}
+          >
             <span>Transactions</span>
-          </button>
+          </Link>
           <button className="flex flex-1 flex-col items-center gap-1 rounded-full px-3 py-1 text-[11px] font-medium">
             <span>Stats</span>
           </button>
