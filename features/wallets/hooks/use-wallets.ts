@@ -20,6 +20,7 @@ type UseWalletsValue = UseWalletsState & {
   restoreWallet: (walletId: string) => void;
   adjustBalance: (adjustment: WalletBalanceAdjustment) => void;
   reorderWallets: (orderedIds: string[]) => void;
+  updateWalletBalance: (walletId: string, delta: number) => void;
 };
 
 export function useWallets(): UseWalletsValue {
@@ -121,6 +122,25 @@ export function useWallets(): UseWalletsValue {
     });
   }
 
+  function updateWalletBalance(walletId: string, delta: number) {
+    setState((previous) => {
+      const nextWallets = previous.wallets.map((wallet) => {
+        if (wallet.id !== walletId) {
+          return wallet;
+        }
+
+        return {
+          ...wallet,
+          balance: wallet.balance + delta,
+          updatedAt: new Date().toISOString(),
+        };
+      });
+
+      persist(nextWallets);
+      return { ...previous, wallets: nextWallets };
+    });
+  }
+
   function reorderWallets(orderedIds: string[]) {
     setState((previous) => {
       const walletMap = new Map(
@@ -154,5 +174,6 @@ export function useWallets(): UseWalletsValue {
     restoreWallet,
     adjustBalance,
     reorderWallets,
+    updateWalletBalance,
   };
 }

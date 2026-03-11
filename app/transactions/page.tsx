@@ -1,18 +1,58 @@
- "use client";
+"use client";
 
+import { useState } from "react";
+import { Transaction } from "@/features/transactions/types/transaction";
 import { AuthGate } from "@/components/auth/auth-gate";
 import { MobileShell } from "@/components/layout/mobile-shell";
-import { CreateTransactionSheet } from "@/components/transactions/create-transaction-sheet";
+import { TransactionSummary } from "@/components/transactions/transaction-summary";
+import { TransactionFilters } from "@/components/transactions/transaction-filters";
 import { TransactionList } from "@/components/transactions/transaction-list";
+import { TransactionFormSheet } from "@/components/transactions/transaction-form-sheet";
+import { DeleteTransactionDialog } from "@/components/transactions/delete-transaction-dialog";
 import { useTransactions } from "@/features/transactions/hooks/use-transactions";
 import { useWallets } from "@/features/wallets/hooks/use-wallets";
+import { Button } from "@/components/ui/button";
 
 export default function TransactionsPage() {
-  const { wallets, isLoading: isWalletsLoading } = useWallets();
-  const { transactions, isLoading: isTransactionsLoading, addTransaction } =
-    useTransactions();
+  const { wallets, isLoading: isWalletsLoading, updateWalletBalance } =
+    useWallets();
+  const {
+    filteredTransactions,
+    isLoading: isTransactionsLoading,
+    filter,
+    setFilter,
+    addTransaction,
+    updateTransaction,
+    deleteTransaction,
+  } = useTransactions(updateWalletBalance);
 
   const isLoading = isWalletsLoading || isTransactionsLoading;
+
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] =
+    useState<Transaction | null>(null);
+  const [deletingTransaction, setDeletingTransaction] =
+    useState<Transaction | null>(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  function handleCreateOpen() {
+    setEditingTransaction(null);
+    setIsFormOpen(true);
+  }
+
+  function handleEditOpen(transaction: Transaction) {
+    setEditingTransaction(transaction);
+    setIsFormOpen(true);
+  }
+
+  function handleDeleteOpen(transaction: Transaction) {
+    setDeletingTransaction(transaction);
+    setIsDeleteOpen(true);
+  }
+
+  function handleDeleteConfirm(transaction: Transaction) {
+    deleteTransaction(transaction);
+  }
 
   return (
     <AuthGate>
@@ -22,11 +62,49 @@ export default function TransactionsPage() {
             Loading your activity
           </div>
         ) : (
-          <TransactionList transactions={transactions} />
+          <div className="flex flex-col gap-4">
+            <TransactionSummary transactions={filteredTransactions} />
+
+            <TransactionFilters
+              filter={filter}
+              wallets={wallets}
+              onFilterChange={setFilter}
+            />
+
+            <TransactionList
+              transactions={filteredTransactions}
+              wallets={wallets}
+              onEdit={handleEditOpen}
+              onDelete={handleDeleteOpen}
+            />
+          </div>
         )}
-        <CreateTransactionSheet wallets={wallets} onSubmit={addTransaction} />
+
+        <Button
+          type="button"
+          size="lg"
+          className="fixed bottom-20 right-4 z-20 shadow-lg shadow-black/40"
+          onClick={handleCreateOpen}
+        >
+          Add transaction
+        </Button>
+
+        <TransactionFormSheet
+          isOpen={isFormOpen}
+          onOpenChange={setIsFormOpen}
+          wallets={wallets}
+          transaction={editingTransaction}
+          onSubmit={addTransaction}
+          onUpdate={updateTransaction}
+        />
+
+        <DeleteTransactionDialog
+          transaction={deletingTransaction}
+          isOpen={isDeleteOpen}
+          onOpenChange={setIsDeleteOpen}
+          onConfirm={handleDeleteConfirm}
+        />
       </MobileShell>
     </AuthGate>
   );
 }
-
