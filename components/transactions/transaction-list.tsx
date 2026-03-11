@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Transaction } from "@/features/transactions/types/transaction";
+import { CustomCategory, Transaction } from "@/features/transactions/types/transaction";
 import { Wallet } from "@/features/wallets/types/wallet";
 import { groupTransactionsByDate } from "@/features/transactions/utils/group-transactions-by-date";
 import { formatCurrency } from "@/features/wallets/utils/format-currency";
@@ -10,6 +10,7 @@ import { TransactionCard } from "./transaction-card";
 type TransactionListProps = {
   transactions: Transaction[];
   wallets: Wallet[];
+  customCategories: CustomCategory[];
   onEdit: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
 };
@@ -17,6 +18,7 @@ type TransactionListProps = {
 export function TransactionList({
   transactions,
   wallets,
+  customCategories,
   onEdit,
   onDelete,
 }: TransactionListProps) {
@@ -77,6 +79,7 @@ export function TransactionList({
                     ? walletMap.get(txn.targetWalletId)
                     : undefined
                 }
+                customCategories={customCategories}
                 onEdit={onEdit}
                 onDelete={onDelete}
               />

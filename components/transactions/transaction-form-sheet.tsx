@@ -2,14 +2,15 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
+  CustomCategory,
   Transaction,
   TransactionCategory,
   TransactionKind,
 } from "@/features/transactions/types/transaction";
 import {
-  CATEGORY_ICONS,
-  CATEGORY_LABELS,
   getCategoriesForKind,
+  getCategoryIcon,
+  getCategoryLabel,
   TRANSACTION_KIND_LABELS,
   TRANSACTION_KIND_OPTIONS,
 } from "@/features/transactions/config/transaction-config";
@@ -24,6 +25,7 @@ type TransactionFormSheetProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   wallets: Wallet[];
+  customCategories: CustomCategory[];
   transaction?: Transaction | null;
   onSubmit: (transaction: Transaction) => void;
   onUpdate?: (
@@ -31,6 +33,7 @@ type TransactionFormSheetProps = {
     updates: Partial<Omit<Transaction, "id" | "createdAt">>,
     original: Transaction,
   ) => void;
+  onAddCustomCategory?: (category: CustomCategory) => void;
 };
 
 type TransactionFormState = {
@@ -39,6 +42,7 @@ type TransactionFormState = {
   kind: TransactionKind;
   category: TransactionCategory;
   amount: string;
+  fee: string;
   description: string;
   note: string;
   occurredAt: string;
@@ -54,6 +58,7 @@ const DEFAULT_FORM: TransactionFormState = {
   kind: "expense",
   category: "food",
   amount: "",
+  fee: "",
   description: "",
   note: "",
   occurredAt: todayDateString(),
@@ -64,25 +69,38 @@ function transactionToForm(txn: Transaction): TransactionFormState {
     walletId: txn.walletId,
     targetWalletId: txn.targetWalletId ?? "",
     kind: txn.kind,
-    category: txn.category,
+    category: txn.category ?? "other",
     amount: String(txn.amount),
-    description: txn.description,
-    note: txn.note,
-    occurredAt: txn.occurredAt.split("T")[0],
+    fee: txn.fee ? String(txn.fee) : "",
+    description: txn.description ?? "",
+    note: txn.note ?? "",
+    occurredAt: (txn.occurredAt ?? "").split("T")[0] || todayDateString(),
   };
 }
+
+type NewCategoryFormState = {
+  name: string;
+  icon: string;
+};
 
 export function TransactionFormSheet({
   isOpen,
   onOpenChange,
   wallets,
+  customCategories,
   transaction,
   onSubmit,
   onUpdate,
+  onAddCustomCategory,
 }: TransactionFormSheetProps) {
   const isEditing = !!transaction;
 
   const [formState, setFormState] = useState<TransactionFormState>(DEFAULT_FORM);
+  const [showNewCategory, setShowNewCategory] = useState(false);
+  const [newCategoryForm, setNewCategoryForm] = useState<NewCategoryFormState>({
+    name: "",
+    icon: "📌",
+  });
 
   useEffect(() => {
     if (isOpen && transaction) {
@@ -92,11 +110,13 @@ export function TransactionFormSheet({
     if (isOpen && !transaction) {
       setFormState({ ...DEFAULT_FORM, occurredAt: todayDateString() });
     }
+
+    setShowNewCategory(false);
   }, [isOpen, transaction]);
 
   const categoryOptions = useMemo(
-    () => getCategoriesForKind(formState.kind),
-    [formState.kind],
+    () => getCategoriesForKind(formState.kind, customCategories),
+    [formState.kind, customCategories],
   );
 
   const isValid = useMemo(() => {
@@ -142,18 +162,42 @@ export function TransactionFormSheet({
       const next = { ...previous, [key]: value };
 
       if (key === "kind") {
-        const nextCategories = getCategoriesForKind(value as TransactionKind);
+        const nextCategories = getCategoriesForKind(
+          value as TransactionKind,
+          customCategories,
+        );
         if (!nextCategories.includes(next.category)) {
           next.category = nextCategories[0];
         }
 
         if ((value as TransactionKind) !== "transfer") {
           next.targetWalletId = "";
+          next.fee = "";
         }
       }
 
       return next;
     });
+  }
+
+  function handleAddCustomCategory() {
+    if (!newCategoryForm.name.trim() || !onAddCustomCategory) {
+      return;
+    }
+
+    const kindForCategory = formState.kind === "transfer" ? "expense" : formState.kind;
+
+    const newCategory: CustomCategory = {
+      id: `custom_${Date.now()}`,
+      name: newCategoryForm.name.trim(),
+      icon: newCategoryForm.icon || "📌",
+      kind: kindForCategory as "income" | "expense",
+    };
+
+    onAddCustomCategory(newCategory);
+    setFormState((prev) => ({ ...prev, category: newCategory.id }));
+    setNewCategoryForm({ name: "", icon: "📌" });
+    setShowNewCategory(false);
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -164,6 +208,9 @@ export function TransactionFormSheet({
     }
 
     const rawAmount = Number(formState.amount.replace(/[^0-9.-]/g, ""));
+    const rawFee = formState.fee
+      ? Number(formState.fee.replace(/[^0-9.-]/g, ""))
+      : 0;
     const now = new Date().toISOString();
     const occurredAtISO = new Date(formState.occurredAt).toISOString();
 
@@ -176,6 +223,7 @@ export function TransactionFormSheet({
           kind: formState.kind,
           category: formState.category,
           amount: rawAmount,
+          fee: rawFee,
           description: formState.description.trim(),
           note: formState.note.trim(),
           occurredAt: occurredAtISO,
@@ -190,6 +238,7 @@ export function TransactionFormSheet({
         kind: formState.kind,
         category: formState.category,
         amount: rawAmount,
+        fee: rawFee,
         description: formState.description.trim(),
         note: formState.note.trim(),
         occurredAt: occurredAtISO,
@@ -285,7 +334,7 @@ export function TransactionFormSheet({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className={cn("grid gap-3", formState.kind === "transfer" ? "grid-cols-3" : "grid-cols-2")}>
             <div className="flex flex-col gap-1">
               <Label htmlFor="txn-amount">Amount</Label>
               <Input
@@ -299,6 +348,22 @@ export function TransactionFormSheet({
                 placeholder="0"
               />
             </div>
+
+            {formState.kind === "transfer" && (
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="txn-fee">Fee</Label>
+                <Input
+                  id="txn-fee"
+                  type="tel"
+                  inputMode="numeric"
+                  value={formState.fee}
+                  onChange={(event) =>
+                    handleFieldChange("fee", event.target.value)
+                  }
+                  placeholder="0"
+                />
+              </div>
+            )}
 
             <div className="flex flex-col gap-1">
               <Label htmlFor="txn-date">Date</Label>
@@ -315,7 +380,55 @@ export function TransactionFormSheet({
 
           {formState.kind !== "transfer" && (
             <div className="flex flex-col gap-1.5">
-              <Label>Category</Label>
+              <div className="flex items-center justify-between">
+                <Label>Category</Label>
+                <button
+                  type="button"
+                  onClick={() => setShowNewCategory((p) => !p)}
+                  className="text-[10px] font-medium text-primary"
+                >
+                  {showNewCategory ? "Cancel" : "+ Custom"}
+                </button>
+              </div>
+
+              {showNewCategory && (
+                <div className="flex gap-2 rounded-xl border border-border-subtle bg-background-soft p-2">
+                  <Input
+                    type="text"
+                    value={newCategoryForm.icon}
+                    onChange={(event) =>
+                      setNewCategoryForm((p) => ({
+                        ...p,
+                        icon: event.target.value,
+                      }))
+                    }
+                    className="h-8 w-12 text-center text-base"
+                    placeholder="📌"
+                  />
+                  <Input
+                    type="text"
+                    value={newCategoryForm.name}
+                    onChange={(event) =>
+                      setNewCategoryForm((p) => ({
+                        ...p,
+                        name: event.target.value,
+                      }))
+                    }
+                    className="h-8 flex-1"
+                    placeholder="Category name"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-8"
+                    onClick={handleAddCustomCategory}
+                    disabled={!newCategoryForm.name.trim()}
+                  >
+                    Add
+                  </Button>
+                </div>
+              )}
+
               <div className="flex flex-wrap gap-1.5">
                 {categoryOptions.map((cat) => (
                   <button
@@ -329,7 +442,8 @@ export function TransactionFormSheet({
                         : "bg-background-soft text-muted hover:text-foreground",
                     )}
                   >
-                    {CATEGORY_ICONS[cat]} {CATEGORY_LABELS[cat]}
+                    {getCategoryIcon(cat, customCategories)}{" "}
+                    {getCategoryLabel(cat, customCategories)}
                   </button>
                 ))}
               </div>

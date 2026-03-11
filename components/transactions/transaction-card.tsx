@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Transaction } from "@/features/transactions/types/transaction";
+import { CustomCategory, Transaction } from "@/features/transactions/types/transaction";
 import { Wallet } from "@/features/wallets/types/wallet";
 import {
-  CATEGORY_ICONS,
-  CATEGORY_LABELS,
+  getCategoryIcon,
+  getCategoryLabel,
 } from "@/features/transactions/config/transaction-config";
 import { formatCurrency } from "@/features/wallets/utils/format-currency";
 import { cn } from "@/lib/utils/cn";
@@ -14,6 +14,7 @@ type TransactionCardProps = {
   transaction: Transaction;
   wallet: Wallet | undefined;
   targetWallet?: Wallet | undefined;
+  customCategories: CustomCategory[];
   onEdit: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
 };
@@ -22,6 +23,7 @@ export function TransactionCard({
   transaction,
   wallet,
   targetWallet,
+  customCategories,
   onEdit,
   onDelete,
 }: TransactionCardProps) {
@@ -30,12 +32,13 @@ export function TransactionCard({
   const isIncome = transaction.kind === "income";
   const isTransfer = transaction.kind === "transfer";
   const currency = wallet?.currency ?? "IDR";
+  const fee = transaction.fee ?? 0;
 
   const formattedAmount = formatCurrency(transaction.amount, currency);
   const sign = isIncome ? "+" : "-";
 
-  const categoryIcon = CATEGORY_ICONS[transaction.category] ?? "📌";
-  const categoryLabel = CATEGORY_LABELS[transaction.category] ?? "Other";
+  const categoryIcon = getCategoryIcon(transaction.category, customCategories);
+  const categoryLabel = getCategoryLabel(transaction.category, customCategories);
 
   const displayDate = new Date(transaction.occurredAt).toLocaleDateString(
     "en-US",
@@ -77,6 +80,11 @@ export function TransactionCard({
             {isTransfer ? "" : sign}
             {formattedAmount}
           </span>
+          {isTransfer && fee > 0 && (
+            <span className="text-[10px] font-medium text-warning">
+              Fee: {formatCurrency(fee, currency)}
+            </span>
+          )}
           <span className="text-[10px] text-muted-soft">{displayDate}</span>
         </div>
       </div>

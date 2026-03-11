@@ -40,6 +40,8 @@ function applyBalanceForAdd(
   transaction: Transaction,
   updateBalance: WalletBalanceUpdater,
 ) {
+  const fee = transaction.fee ?? 0;
+
   if (transaction.kind === "income") {
     updateBalance(transaction.walletId, transaction.amount);
   }
@@ -49,7 +51,7 @@ function applyBalanceForAdd(
   }
 
   if (transaction.kind === "transfer" && transaction.targetWalletId) {
-    updateBalance(transaction.walletId, -transaction.amount);
+    updateBalance(transaction.walletId, -(transaction.amount + fee));
     updateBalance(transaction.targetWalletId, transaction.amount);
   }
 }
@@ -58,6 +60,8 @@ function reverseBalanceForRemove(
   transaction: Transaction,
   updateBalance: WalletBalanceUpdater,
 ) {
+  const fee = transaction.fee ?? 0;
+
   if (transaction.kind === "income") {
     updateBalance(transaction.walletId, -transaction.amount);
   }
@@ -67,7 +71,7 @@ function reverseBalanceForRemove(
   }
 
   if (transaction.kind === "transfer" && transaction.targetWalletId) {
-    updateBalance(transaction.walletId, transaction.amount);
+    updateBalance(transaction.walletId, transaction.amount + fee);
     updateBalance(transaction.targetWalletId, -transaction.amount);
   }
 }

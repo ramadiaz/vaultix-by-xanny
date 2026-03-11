@@ -18,7 +18,8 @@ export type TransactionCategory =
   | "insurance"
   | "gift_sent"
   | "transfer"
-  | "other";
+  | "other"
+  | string;
 
 export type Transaction = {
   id: string;
@@ -27,9 +28,17 @@ export type Transaction = {
   kind: TransactionKind;
   category: TransactionCategory;
   amount: number;
+  fee: number;
   description: string;
   note: string;
   occurredAt: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type CustomCategory = {
+  id: string;
+  name: string;
+  icon: string;
+  kind: "income" | "expense";
 };

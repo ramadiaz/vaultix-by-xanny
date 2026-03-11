@@ -1,4 +1,4 @@
-import { TransactionCategory, TransactionKind } from "../types/transaction";
+import { CustomCategory, TransactionCategory, TransactionKind } from "../types/transaction";
 
 export const TRANSACTION_KIND_LABELS: Record<TransactionKind, string> = {
   income: "Income",
@@ -12,7 +12,7 @@ export const TRANSACTION_KIND_OPTIONS: TransactionKind[] = [
   "transfer",
 ];
 
-export const INCOME_CATEGORIES: TransactionCategory[] = [
+export const BUILTIN_INCOME_CATEGORIES: TransactionCategory[] = [
   "salary",
   "freelance",
   "investment_return",
@@ -20,7 +20,7 @@ export const INCOME_CATEGORIES: TransactionCategory[] = [
   "other",
 ];
 
-export const EXPENSE_CATEGORIES: TransactionCategory[] = [
+export const BUILTIN_EXPENSE_CATEGORIES: TransactionCategory[] = [
   "food",
   "transport",
   "shopping",
@@ -38,7 +38,7 @@ export const EXPENSE_CATEGORIES: TransactionCategory[] = [
 
 export const TRANSFER_CATEGORIES: TransactionCategory[] = ["transfer"];
 
-export const CATEGORY_LABELS: Record<TransactionCategory, string> = {
+export const BUILTIN_CATEGORY_LABELS: Record<string, string> = {
   salary: "Salary",
   freelance: "Freelance",
   investment_return: "Investment Return",
@@ -59,7 +59,7 @@ export const CATEGORY_LABELS: Record<TransactionCategory, string> = {
   other: "Other",
 };
 
-export const CATEGORY_ICONS: Record<TransactionCategory, string> = {
+export const BUILTIN_CATEGORY_ICONS: Record<string, string> = {
   salary: "💰",
   freelance: "💻",
   investment_return: "📈",
@@ -80,14 +80,54 @@ export const CATEGORY_ICONS: Record<TransactionCategory, string> = {
   other: "📌",
 };
 
-export function getCategoriesForKind(kind: TransactionKind): TransactionCategory[] {
-  if (kind === "income") {
-    return INCOME_CATEGORIES;
-  }
-
+export function getCategoriesForKind(
+  kind: TransactionKind,
+  customCategories: CustomCategory[] = [],
+): TransactionCategory[] {
   if (kind === "transfer") {
     return TRANSFER_CATEGORIES;
   }
 
-  return EXPENSE_CATEGORIES;
+  const builtIn =
+    kind === "income" ? BUILTIN_INCOME_CATEGORIES : BUILTIN_EXPENSE_CATEGORIES;
+
+  const custom = customCategories
+    .filter((cat) => cat.kind === kind)
+    .map((cat) => cat.id);
+
+  return [...builtIn, ...custom];
+}
+
+export function getCategoryLabel(
+  category: TransactionCategory,
+  customCategories: CustomCategory[] = [],
+): string {
+  if (BUILTIN_CATEGORY_LABELS[category]) {
+    return BUILTIN_CATEGORY_LABELS[category];
+  }
+
+  const custom = customCategories.find((cat) => cat.id === category);
+
+  if (custom) {
+    return custom.name;
+  }
+
+  return category;
+}
+
+export function getCategoryIcon(
+  category: TransactionCategory,
+  customCategories: CustomCategory[] = [],
+): string {
+  if (BUILTIN_CATEGORY_ICONS[category]) {
+    return BUILTIN_CATEGORY_ICONS[category];
+  }
+
+  const custom = customCategories.find((cat) => cat.id === category);
+
+  if (custom) {
+    return custom.icon;
+  }
+
+  return "📌";
 }

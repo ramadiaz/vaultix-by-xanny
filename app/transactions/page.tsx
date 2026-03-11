@@ -10,6 +10,7 @@ import { TransactionList } from "@/components/transactions/transaction-list";
 import { TransactionFormSheet } from "@/components/transactions/transaction-form-sheet";
 import { DeleteTransactionDialog } from "@/components/transactions/delete-transaction-dialog";
 import { useTransactions } from "@/features/transactions/hooks/use-transactions";
+import { useCustomCategories } from "@/features/transactions/hooks/use-custom-categories";
 import { useWallets } from "@/features/wallets/hooks/use-wallets";
 import { Button } from "@/components/ui/button";
 
@@ -25,6 +26,7 @@ export default function TransactionsPage() {
     updateTransaction,
     deleteTransaction,
   } = useTransactions(updateWalletBalance);
+  const { customCategories, addCategory } = useCustomCategories();
 
   const isLoading = isWalletsLoading || isTransactionsLoading;
 
@@ -74,6 +76,7 @@ export default function TransactionsPage() {
             <TransactionList
               transactions={filteredTransactions}
               wallets={wallets}
+              customCategories={customCategories}
               onEdit={handleEditOpen}
               onDelete={handleDeleteOpen}
             />
@@ -93,9 +96,11 @@ export default function TransactionsPage() {
           isOpen={isFormOpen}
           onOpenChange={setIsFormOpen}
           wallets={wallets}
+          customCategories={customCategories}
           transaction={editingTransaction}
           onSubmit={addTransaction}
           onUpdate={updateTransaction}
+          onAddCustomCategory={addCategory}
         />
 
         <DeleteTransactionDialog
