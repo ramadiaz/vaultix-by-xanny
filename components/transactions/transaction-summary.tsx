@@ -31,7 +31,7 @@ export function TransactionSummary({ transactions }: TransactionSummaryProps) {
   }, [transactions]);
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-1 gap-2 xs:grid-cols-3">
       <div className="rounded-2xl border border-border-subtle bg-success/5 px-3 py-2.5 backdrop-blur-md">
         <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-success/70">
           Income
