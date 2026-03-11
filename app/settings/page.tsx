@@ -6,6 +6,7 @@ import { MobileShell } from "@/components/layout/mobile-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/features/auth/hooks/use-auth";
+import { useDriveSync } from "@/features/drive/hooks/use-drive-sync";
 import { exportVaultixBackup } from "@/features/import-export/services/vaultix-export.service";
 import { exportAsMmbak } from "@/features/import-export/services/mmbak-export.service";
 import {
@@ -37,6 +38,15 @@ type ImportStatus =
 
 export default function SettingsPage() {
   const { signOut } = useAuth();
+  const {
+    state: driveState,
+    backups,
+    sync: syncToDrive,
+    fetchBackups,
+    restore,
+    restoreLatest,
+    clearState: clearDriveState,
+  } = useDriveSync();
   const excelInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
   const mmbakInputRef = useRef<HTMLInputElement>(null);
@@ -330,6 +340,107 @@ export default function SettingsPage() {
                 {isExportingMmbak ? "Exporting..." : "Export .mmbak"}
               </Button>
             </div>
+          </Card>
+
+          <Card className="flex flex-col gap-3">
+            <h3 className="text-sm font-semibold text-foreground">
+              Google Drive Sync
+            </h3>
+            <p className="text-[11px] leading-relaxed text-muted">
+              Backup and restore your data from your Google Drive.
+            </p>
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-9"
+                onClick={syncToDrive}
+                disabled={
+                  driveState.status === "syncing" ||
+                  driveState.status === "listing" ||
+                  driveState.status === "restoring"
+                }
+              >
+                {driveState.status === "syncing"
+                  ? "Syncing..."
+                  : "Sync to Drive"}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-9"
+                onClick={fetchBackups}
+                disabled={
+                  driveState.status === "syncing" ||
+                  driveState.status === "listing" ||
+                  driveState.status === "restoring"
+                }
+              >
+                {driveState.status === "listing"
+                  ? "Loading..."
+                  : "Restore from Drive"}
+              </Button>
+            </div>
+            {backups.length > 0 && (
+              <div className="flex flex-col gap-1 rounded-xl border border-border-subtle bg-background-soft p-3">
+                <p className="text-[11px] font-medium text-muted-soft">
+                  Available backups
+                </p>
+                {backups.map((b) => (
+                  <div
+                    key={b.id}
+                    className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-background"
+                  >
+                    <span className="truncate text-xs text-foreground">
+                      {b.name}
+                    </span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs"
+                      onClick={() => restore(b.id)}
+                      disabled={driveState.status === "restoring"}
+                    >
+                      Restore
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {(driveState.status === "synced" ||
+              driveState.status === "restored") && (
+              <div className="flex flex-col gap-1">
+                <p className="text-[12px] font-medium text-success">
+                  {driveState.message}
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-fit text-xs"
+                  onClick={clearDriveState}
+                >
+                  Dismiss
+                </Button>
+              </div>
+            )}
+            {driveState.status === "error" && (
+              <div className="flex flex-col gap-1">
+                <p className="text-[12px] font-medium text-danger">
+                  {driveState.message}
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-fit text-xs"
+                  onClick={clearDriveState}
+                >
+                  Dismiss
+                </Button>
+              </div>
+            )}
           </Card>
 
           <Card className="flex flex-col gap-3">
