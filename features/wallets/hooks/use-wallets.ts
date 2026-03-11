@@ -44,12 +44,30 @@ export function useWallets(): UseWalletsValue {
   });
 
   useEffect(() => {
-    setState({
-      assets: getStoredAssets(),
-      assetGroups: getStoredAssetGroups(),
-      currencies: getStoredCurrencies(),
-      isLoading: false,
-    });
+    let mounted = true;
+
+    async function load() {
+      const [assets, groups, currencies] = await Promise.all([
+        getStoredAssets(),
+        getStoredAssetGroups(),
+        getStoredCurrencies(),
+      ]);
+
+      if (!mounted) return;
+
+      setState({
+        assets,
+        assetGroups: groups,
+        currencies,
+        isLoading: false,
+      });
+    }
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const activeAssets = useMemo(
@@ -90,16 +108,16 @@ export function useWallets(): UseWalletsValue {
     [state.currencies],
   );
 
-  function persist(nextAssets: Asset[]) {
-    storeAssets(nextAssets);
+  async function persist(nextAssets: Asset[]) {
+    await storeAssets(nextAssets);
   }
 
   function addAsset(asset: Asset) {
     setState((prev) => {
       const next = [...prev.assets, asset];
-      persist(next);
       return { ...prev, assets: next };
     });
+    persist([...state.assets, asset]);
   }
 
   function updateAsset(assetUid: string, updates: Partial<Omit<Asset, "uid">>) {
@@ -108,17 +126,21 @@ export function useWallets(): UseWalletsValue {
         if (a.uid !== assetUid) return a;
         return { ...a, ...updates, utime: Date.now() };
       });
-      persist(next);
       return { ...prev, assets: next };
     });
+    const next = state.assets.map((a) =>
+      a.uid === assetUid ? { ...a, ...updates, utime: Date.now() } : a,
+    );
+    persist(next);
   }
 
   function deleteAsset(assetUid: string) {
     setState((prev) => {
       const next = prev.assets.filter((a) => a.uid !== assetUid);
-      persist(next);
       return { ...prev, assets: next };
     });
+    const next = state.assets.filter((a) => a.uid !== assetUid);
+    persist(next);
   }
 
   function archiveAsset(assetUid: string) {
@@ -135,9 +157,14 @@ export function useWallets(): UseWalletsValue {
         if (a.uid !== adjustment.assetUid) return a;
         return { ...a, balance: a.balance + adjustment.amount, utime: adjustment.adjustedAt };
       });
-      persist(next);
       return { ...prev, assets: next };
     });
+    const next = state.assets.map((a) =>
+      a.uid === adjustment.assetUid
+        ? { ...a, balance: a.balance + adjustment.amount, utime: adjustment.adjustedAt }
+        : a,
+    );
+    persist(next);
   }
 
   function updateAssetBalance(assetUid: string, delta: number) {
@@ -146,9 +173,12 @@ export function useWallets(): UseWalletsValue {
         if (a.uid !== assetUid) return a;
         return { ...a, balance: a.balance + delta, utime: Date.now() };
       });
-      persist(next);
       return { ...prev, assets: next };
     });
+    const next = state.assets.map((a) =>
+      a.uid === assetUid ? { ...a, balance: a.balance + delta, utime: Date.now() } : a,
+    );
+    persist(next);
   }
 
   function reorderAssets(orderedUids: string[]) {
@@ -163,9 +193,18 @@ export function useWallets(): UseWalletsValue {
 
       const remaining = prev.assets.filter((a) => !orderedUids.includes(a.uid));
       const next = [...reordered, ...remaining];
-      persist(next);
       return { ...prev, assets: next };
     });
+    const assetMap = new Map(state.assets.map((a) => [a.uid, a]));
+    const reordered = orderedUids
+      .map((uid, i) => {
+        const asset = assetMap.get(uid);
+        return asset ? { ...asset, orderSeq: i + 1 } : undefined;
+      })
+      .filter((a): a is Asset => a !== undefined);
+    const remaining = state.assets.filter((a) => !orderedUids.includes(a.uid));
+    const next = [...reordered, ...remaining];
+    persist(next);
   }
 
   return {

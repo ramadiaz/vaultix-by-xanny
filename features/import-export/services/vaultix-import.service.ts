@@ -32,20 +32,22 @@ export function parseVaultixJson(jsonString: string): VaultixExportData {
   return data as VaultixExportData;
 }
 
-export function applyVaultixImport(
+export async function applyVaultixImport(
   data: VaultixExportData,
   mode: ImportMode,
   existingAssets: Asset[],
   existingTransactions: Transaction[],
   existingCategories: Category[],
-): VaultixImportResult {
+): Promise<VaultixImportResult> {
   if (mode === "replace") {
-    storeAssets(data.assets);
-    storeTransactions(data.transactions);
-    storeCategories(data.categories ?? []);
+    await Promise.all([
+      storeAssets(data.assets),
+      storeTransactions(data.transactions),
+      storeCategories(data.categories ?? []),
+    ]);
 
-    if (data.assetGroups) storeAssetGroups(data.assetGroups);
-    if (data.currencies) storeCurrencies(data.currencies);
+    if (data.assetGroups) await storeAssetGroups(data.assetGroups);
+    if (data.currencies) await storeCurrencies(data.currencies);
 
     return {
       assets: data.assets,
@@ -67,9 +69,11 @@ export function applyVaultixImport(
   const newCategories = incoming.filter((c) => !catUidSet.has(c.uid));
   const mergedCategories = [...existingCategories, ...newCategories];
 
-  storeAssets(mergedAssets);
-  storeTransactions(mergedTransactions);
-  storeCategories(mergedCategories);
+  await Promise.all([
+    storeAssets(mergedAssets),
+    storeTransactions(mergedTransactions),
+    storeCategories(mergedCategories),
+  ]);
 
   return {
     assets: mergedAssets,
@@ -78,7 +82,7 @@ export function applyVaultixImport(
   };
 }
 
-export function applyMoneyManagerImport(
+export async function applyMoneyManagerImport(
   assets: Asset[],
   transactions: Transaction[],
   categories: Category[],
@@ -86,11 +90,13 @@ export function applyMoneyManagerImport(
   existingAssets: Asset[],
   existingTransactions: Transaction[],
   existingCategories: Category[],
-): VaultixImportResult {
+): Promise<VaultixImportResult> {
   if (mode === "replace") {
-    storeAssets(assets);
-    storeTransactions(transactions);
-    storeCategories(categories);
+    await Promise.all([
+      storeAssets(assets),
+      storeTransactions(transactions),
+      storeCategories(categories),
+    ]);
 
     return { assets, transactions, categories };
   }
@@ -105,9 +111,11 @@ export function applyMoneyManagerImport(
   const mmNewCats = categories.filter((c) => !exCatSet.has(c.uid));
   const mmMergedCats = [...existingCategories, ...mmNewCats];
 
-  storeAssets(mmMergedAssets);
-  storeTransactions(mmMergedTxns);
-  storeCategories(mmMergedCats);
+  await Promise.all([
+    storeAssets(mmMergedAssets),
+    storeTransactions(mmMergedTxns),
+    storeCategories(mmMergedCats),
+  ]);
 
   return {
     assets: mmMergedAssets,
@@ -116,22 +124,24 @@ export function applyMoneyManagerImport(
   };
 }
 
-export function applyMmbakImport(
+export async function applyMmbakImport(
   data: MmbakImportResult,
   mode: ImportMode,
   existingAssets: Asset[],
   existingTransactions: Transaction[],
   existingCategories: Category[],
-): VaultixImportResult {
+): Promise<VaultixImportResult> {
   if (mode === "replace") {
-    storeAssets(data.assets);
-    storeTransactions(data.transactions);
-    storeCategories(data.categories);
+    await Promise.all([
+      storeAssets(data.assets),
+      storeTransactions(data.transactions),
+      storeCategories(data.categories),
+    ]);
 
-    if (data.assetGroups.length > 0) storeAssetGroups(data.assetGroups);
-    if (data.currencies.length > 0) storeCurrencies(data.currencies);
-    if (data.tags.length > 0) storeTags(data.tags);
-    if (data.txTags.length > 0) storeTxTags(data.txTags);
+    if (data.assetGroups.length > 0) await storeAssetGroups(data.assetGroups);
+    if (data.currencies.length > 0) await storeCurrencies(data.currencies);
+    if (data.tags.length > 0) await storeTags(data.tags);
+    if (data.txTags.length > 0) await storeTxTags(data.txTags);
 
     return {
       assets: data.assets,
@@ -152,14 +162,16 @@ export function applyMmbakImport(
   const bakNewCats = data.categories.filter((c) => !bakCatSet.has(c.uid));
   const bakMergedCats = [...existingCategories, ...bakNewCats];
 
-  storeAssets(bakMergedAssets);
-  storeTransactions(bakMergedTxns);
-  storeCategories(bakMergedCats);
+  await Promise.all([
+    storeAssets(bakMergedAssets),
+    storeTransactions(bakMergedTxns),
+    storeCategories(bakMergedCats),
+  ]);
 
-  if (data.assetGroups.length > 0) storeAssetGroups(data.assetGroups);
-  if (data.currencies.length > 0) storeCurrencies(data.currencies);
-  if (data.tags.length > 0) storeTags(data.tags);
-  if (data.txTags.length > 0) storeTxTags(data.txTags);
+  if (data.assetGroups.length > 0) await storeAssetGroups(data.assetGroups);
+  if (data.currencies.length > 0) await storeCurrencies(data.currencies);
+  if (data.tags.length > 0) await storeTags(data.tags);
+  if (data.txTags.length > 0) await storeTxTags(data.txTags);
 
   return {
     assets: bakMergedAssets,

@@ -95,10 +95,22 @@ export function useTransactions(
   const [filter, setFilter] = useState<TransactionFilter>({});
 
   useEffect(() => {
-    setState({
-      transactions: getStoredTransactions(),
-      isLoading: false,
-    });
+    let mounted = true;
+
+    async function load() {
+      const transactions = await getStoredTransactions();
+      if (!mounted) return;
+      setState({
+        transactions,
+        isLoading: false,
+      });
+    }
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const displayTransactions: DisplayTransaction[] = useMemo(() => {
@@ -191,8 +203,8 @@ export function useTransactions(
     [state.transactions],
   );
 
-  function persist(next: Transaction[]) {
-    storeTransactions(next);
+  async function persist(next: Transaction[]) {
+    await storeTransactions(next);
   }
 
   function addIncomeExpense(txn: Transaction) {
@@ -200,9 +212,9 @@ export function useTransactions(
 
     setState((prev) => {
       const next = [txn, ...prev.transactions];
-      persist(next);
       return { ...prev, transactions: next };
     });
+    persist([txn, ...state.transactions]);
   }
 
   function addTransfer(
@@ -301,9 +313,9 @@ export function useTransactions(
 
     setState((prev) => {
       const next = [...newTxns, ...prev.transactions];
-      persist(next);
       return { ...prev, transactions: next };
     });
+    persist([...newTxns, ...state.transactions]);
   }
 
   function updateIncomeExpense(
@@ -320,9 +332,15 @@ export function useTransactions(
         applyBalanceForTx(updated, updateAssetBalance);
         return updated;
       });
-      persist(next);
       return { ...prev, transactions: next };
     });
+    const next = state.transactions.map((t) => {
+      if (t.uid !== txnUid) return t;
+      const updated: Transaction = { ...t, ...updates, utime: Date.now() };
+      applyBalanceForTx(updated, updateAssetBalance);
+      return updated;
+    });
+    persist(next);
   }
 
   function deleteTransactionGroup(display: DisplayTransaction) {
@@ -345,9 +363,10 @@ export function useTransactions(
       }
 
       const next = prev.transactions.filter((t) => !uidsToDelete.has(t.uid));
-      persist(next);
       return { ...prev, transactions: next };
     });
+    const next = state.transactions.filter((t) => !uidsToDelete.has(t.uid));
+    persist(next);
   }
 
   return {

@@ -20,20 +20,32 @@ export function useCategories(): UseCategoriesValue {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setCategories(getStoredCategories());
-    setIsLoading(false);
+    let mounted = true;
+
+    async function load() {
+      const stored = await getStoredCategories();
+      if (!mounted) return;
+      setCategories(stored);
+      setIsLoading(false);
+    }
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  function persist(next: Category[]) {
-    storeCategories(next);
+  async function persist(next: Category[]) {
+    await storeCategories(next);
   }
 
   function addCategory(category: Category) {
     setCategories((prev) => {
       const next = [...prev, category];
-      persist(next);
       return next;
     });
+    persist([...categories, category]);
   }
 
   function updateCategory(
@@ -44,9 +56,12 @@ export function useCategories(): UseCategoriesValue {
       const next = prev.map((c) =>
         c.uid === categoryUid ? { ...c, ...updates, utime: Date.now() } : c,
       );
-      persist(next);
       return next;
     });
+    const next = categories.map((c) =>
+      c.uid === categoryUid ? { ...c, ...updates, utime: Date.now() } : c,
+    );
+    persist(next);
   }
 
   function deleteCategory(categoryUid: string) {
@@ -54,9 +69,12 @@ export function useCategories(): UseCategoriesValue {
       const next = prev.map((c) =>
         c.uid === categoryUid ? { ...c, isDel: true, utime: Date.now() } : c,
       );
-      persist(next);
       return next;
     });
+    const next = categories.map((c) =>
+      c.uid === categoryUid ? { ...c, isDel: true, utime: Date.now() } : c,
+    );
+    persist(next);
   }
 
   return {

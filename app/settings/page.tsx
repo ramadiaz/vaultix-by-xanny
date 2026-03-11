@@ -42,8 +42,8 @@ export default function SettingsPage() {
   const [importMode, setImportMode] = useState<ImportMode>("merge");
   const [isExportingMmbak, setIsExportingMmbak] = useState(false);
 
-  function handleExportJson() {
-    exportVaultixBackup();
+  async function handleExportJson() {
+    await exportVaultixBackup();
   }
 
   async function handleExportMmbak() {
@@ -172,16 +172,18 @@ export default function SettingsPage() {
     }
   }
 
-  function handleConfirmImport() {
+  async function handleConfirmImport() {
     if (importStatus.state !== "preview") return;
 
     try {
-      const existingAssets = getStoredAssets();
-      const existingTransactions = getStoredTransactions();
-      const existingCategories = getStoredCategories();
+      const [existingAssets, existingTransactions, existingCategories] = await Promise.all([
+        getStoredAssets(),
+        getStoredTransactions(),
+        getStoredCategories(),
+      ]);
 
       if (importStatus.source === "mmbak" && importStatus.mmbakData) {
-        applyMmbakImport(
+        await applyMmbakImport(
           importStatus.mmbakData,
           importMode,
           existingAssets,
@@ -190,7 +192,7 @@ export default function SettingsPage() {
         );
       } else if (importStatus.source === "json" && importStatus.rawJson) {
         const data = parseVaultixJson(importStatus.rawJson);
-        applyVaultixImport(
+        await applyVaultixImport(
           data,
           importMode,
           existingAssets,
@@ -198,7 +200,7 @@ export default function SettingsPage() {
           existingCategories,
         );
       } else {
-        applyMoneyManagerImport(
+        await applyMoneyManagerImport(
           importStatus.result.assets,
           importStatus.result.transactions,
           importStatus.result.categories,

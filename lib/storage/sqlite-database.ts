@@ -1,7 +1,10 @@
-import initSqlJs from "sql.js";
-import { getStoredAssets, getStoredAssetGroups, getStoredCurrencies } from "@/features/wallets/services/wallet-storage.service";
-import { getStoredTransactions, getStoredTags, getStoredTxTags } from "@/features/transactions/services/transaction-storage.service";
-import { getStoredCategories } from "@/features/transactions/services/category-storage.service";
+import initSqlJs, { Database } from "sql.js";
+
+const DB_KEY = "vaultix.sqlite";
+
+const isBrowser = typeof window !== "undefined";
+
+let dbPromise: Promise<Database> | null = null;
 
 const SCHEMA = `
 CREATE TABLE ASSETGROUP (
@@ -283,132 +286,64 @@ CREATE TABLE PHOTO (
 CREATE TABLE android_metadata (locale TEXT);
 `;
 
-export async function exportAsMmbak(): Promise<void> {
+async function createDatabase(): Promise<Database> {
   const SQL = await initSqlJs({
     locateFile: () => `/sql-wasm.wasm`,
   });
 
+  if (!isBrowser) {
+    const db = new SQL.Database();
+    return db;
+  }
+
+  const raw = window.localStorage.getItem(DB_KEY);
+
+  if (raw) {
+    try {
+      const stored = JSON.parse(raw) as number[];
+      const data = new Uint8Array(stored);
+      const db = new SQL.Database(data);
+      return db;
+    } catch {
+      const db = new SQL.Database();
+      return db;
+    }
+  }
+
   const db = new SQL.Database();
 
+  const statements = SCHEMA.split(";")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  for (const stmt of statements) {
+    db.run(stmt);
+  }
+
+  db.run("INSERT INTO android_metadata (locale) VALUES ('en_US')");
+
+  return db;
+}
+
+export async function getDatabase(): Promise<Database> {
+  if (!dbPromise) {
+    dbPromise = createDatabase();
+  }
+  return dbPromise;
+}
+
+export async function persistDatabase(db?: Database): Promise<void> {
+  if (!isBrowser) {
+    return;
+  }
+
+  const instance = db ?? (await getDatabase());
+  const data = instance.export();
+  const arr = Array.from(data);
   try {
-    const statements = SCHEMA.split(";")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-
-    for (const stmt of statements) {
-      db.run(stmt);
-    }
-
-    db.run("INSERT INTO android_metadata (locale) VALUES ('en_US')");
-
-    const assetGroups = await getStoredAssetGroups();
-    for (const g of assetGroups) {
-      db.run(
-        `INSERT INTO ASSETGROUP (uid, IS_DEL, USETIME, ACC_GROUP_NAME, TYPE, ORDERSEQ, isSynced, syncTime, syncVersion) 
-         VALUES (?, ?, ?, ?, ?, ?, 0, NULL, 0)`,
-        [g.uid, g.isDel ? 1 : 0, Date.now(), g.name, g.type, g.orderSeq],
-      );
-    }
-
-    const currencies = await getStoredCurrencies();
-    for (const c of currencies) {
-      db.run(
-        `INSERT INTO CURRENCY (uid, NAME, ISO, MAIN_ISO, IS_DEL, ORDER_SEQ, RATE, SYMBOL, INSERT_TYPE, SYMBOL_POSITION, IS_MAIN_CURRENCY, IS_SHOW, MODIFY_DATE, DECIMAL_POINT, isSynced, syncTime, syncVersion) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'I', ?, ?, ?, ?, ?, 0, NULL, 0)`,
-        [c.uid, c.name, c.iso, c.mainIso, c.isDel ? 1 : 0, c.orderSeq, c.rate, c.symbol, c.symbolPosition, c.isMainCurrency ? 1 : 0, c.isShow ? 1 : 0, Date.now(), c.decimalPoint],
-      );
-    }
-
-    const assets = await getStoredAssets();
-    for (const a of assets) {
-      db.run(
-        `INSERT INTO ASSETS (CARD_DAY_FIN, CARD_DAY_PAY, NIC_NAME, ORDERSEQ, ZDATA, ZDATA1, ZDATA2, IS_TRANS_EXPENSE, IS_CARD_AUTO_PAY, A_UTIME, CARD_USAGE_HURDLE_TYPE, CARD_USAGE_HURDLE_START_DATE, CARD_USAGE_HURDLE_AMOUNT, uid, currencyUid, cardAssetUid, groupUid, isSynced, syncTime, syncVersion) 
-         VALUES (?, ?, ?, ?, '0', '', '0', ?, ?, ?, 1, NULL, 0.0, ?, ?, NULL, ?, 0, NULL, 0)`,
-        [a.cardDayFin ?? "1", a.cardDayPay ?? "1", a.name, a.orderSeq, a.isTransExpense ? 1 : 0, a.isCardAutoPay ? 1 : 0, a.utime, a.uid, a.currencyUid, a.groupUid],
-      );
-    }
-
-    const categories = await getStoredCategories();
-    for (const c of categories) {
-      db.run(
-        `INSERT INTO ZCATEGORY (C_IS_DEL, C_UTIME, uid, NAME, ORDERSEQ, TYPE, STATUS, pUid, isSynced, syncTime, syncVersion) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, 0)`,
-        [c.isDel ? 1 : null, c.utime, c.uid, c.name, c.orderSeq, c.type, c.status, c.pUid ?? "0"],
-      );
-    }
-
-    const assetNameMap = new Map(assets.map((a) => [a.uid, a.name]));
-    const categoryNameMap = new Map(categories.map((c) => [c.uid, c.name]));
-
-    const transactions = await getStoredTransactions();
-    for (let i = 0; i < transactions.length; i++) {
-      const t = transactions[i];
-      db.run(
-        `INSERT INTO INOUTCOME (AID, uid, assetUid, ctgUid, toAssetUid, ZCONTENT, ZDATE, WDATE, DO_TYPE, ZMONEY, IN_ZMONEY, txUidTrans, txUidFee, IS_DEL, UTIME, currencyUid, AMOUNT_ACCOUNT, MARK, paid, lat, lng, ASSET_NIC, CATEGORY_NAME, isSynced, syncTime, syncVersion) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, 0)`,
-        [
-          i + 1,
-          t.uid,
-          t.assetUid,
-          t.ctgUid,
-          t.toAssetUid,
-          t.content,
-          t.date,
-          t.writeDate,
-          t.doType,
-          t.money,
-          t.inMoney,
-          t.txUidTrans,
-          t.txUidFee,
-          t.isDel ? 1 : 0,
-          t.utime,
-          t.currencyUid,
-          t.amountAccount,
-          t.mark,
-          t.paid,
-          t.lat,
-          t.lng,
-          assetNameMap.get(t.assetUid) ?? "",
-          t.ctgUid ? (categoryNameMap.get(t.ctgUid) ?? "") : "",
-        ],
-      );
-    }
-
-    const tags = await getStoredTags();
-    for (const tag of tags) {
-      db.run(
-        `INSERT INTO TAG (uid, name, orderSeq, isDel, utime, isSynced, syncTime, syncVersion) 
-         VALUES (?, ?, ?, ?, ?, 0, NULL, 0)`,
-        [tag.uid, tag.name, tag.orderSeq, tag.isDel ? 1 : 0, tag.utime],
-      );
-    }
-
-    const txTags = await getStoredTxTags();
-    for (const tt of txTags) {
-      db.run(
-        `INSERT INTO TX_TAG (uid, txUid, tagUid, orderSeq, isDel, utime, isSynced, syncTime, syncVersion) 
-         VALUES (?, ?, ?, ?, ?, ?, 0, NULL, 0)`,
-        [tt.uid, tt.txUid, tt.tagUid, tt.orderSeq, tt.isDel ? 1 : 0, tt.utime],
-      );
-    }
-
-    const data = db.export();
-    const blob = new Blob([data.buffer as ArrayBuffer], { type: "application/octet-stream" });
-    const url = URL.createObjectURL(blob);
-
-    const dateStr = new Date()
-      .toISOString()
-      .replace(/[-:T]/g, "")
-      .slice(0, 14);
-    const filename = `MM(${dateStr}).mmbak`;
-
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = filename;
-    anchor.click();
-
-    URL.revokeObjectURL(url);
-  } finally {
-    db.close();
+    window.localStorage.setItem(DB_KEY, JSON.stringify(arr));
+  } catch {
+    return;
   }
 }
+

@@ -5,15 +5,23 @@ import { VaultixExportData } from "../types/import-export";
 
 const EXPORT_VERSION = 2;
 
-export function buildExportData(): VaultixExportData {
+export async function buildExportData(): Promise<VaultixExportData> {
+  const [assets, assetGroups, currencies, transactions, categories] = await Promise.all([
+    getStoredAssets(),
+    getStoredAssetGroups(),
+    getStoredCurrencies(),
+    getStoredTransactions(),
+    getStoredCategories(),
+  ]);
+
   return {
     version: EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
-    assets: getStoredAssets(),
-    assetGroups: getStoredAssetGroups(),
-    currencies: getStoredCurrencies(),
-    transactions: getStoredTransactions(),
-    categories: getStoredCategories(),
+    assets,
+    assetGroups,
+    currencies,
+    transactions,
+    categories,
   };
 }
 
@@ -33,7 +41,7 @@ export function downloadAsJson(data: VaultixExportData) {
   URL.revokeObjectURL(url);
 }
 
-export function exportVaultixBackup() {
-  const data = buildExportData();
+export async function exportVaultixBackup() {
+  const data = await buildExportData();
   downloadAsJson(data);
 }
