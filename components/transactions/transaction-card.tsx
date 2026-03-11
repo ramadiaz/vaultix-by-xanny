@@ -62,7 +62,7 @@ export function TransactionCard({
   return (
     <div
       onClick={() => setShowActions((p) => !p)}
-      className="overflow-hidden rounded-2xl border border-border-subtle bg-background/80 backdrop-blur-md transition active:scale-[0.98]"
+      className="overflow-hidden rounded-2xl border border-glass-border bg-glass-bg transition-transform duration-150 ease-out active:scale-[0.99]"
     >
       <div className="flex items-center gap-3 px-4 py-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-base">
@@ -104,7 +104,7 @@ export function TransactionCard({
       </div>
 
       {showActions && (
-        <div className="flex items-center gap-1 border-t border-border-subtle bg-background-soft px-3 py-2">
+        <div className="flex items-center gap-1 border-t border-glass-border bg-glass-bg-strong px-3 py-2">
           <button
             type="button"
             onClick={(event) => {

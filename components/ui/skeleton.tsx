@@ -12,7 +12,7 @@ export function Skeleton({ className }: SkeletonProps) {
       role="status"
       aria-label="Loading"
       className={cn(
-        "skeleton-shimmer rounded-xl bg-accent-soft/60",
+        "skeleton-shimmer rounded-xl bg-glass-bg",
         className,
       )}
     />

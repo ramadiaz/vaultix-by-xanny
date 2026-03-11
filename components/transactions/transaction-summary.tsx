@@ -32,7 +32,7 @@ export function TransactionSummary({ transactions }: TransactionSummaryProps) {
 
   return (
     <div className="grid grid-cols-1 gap-2 xs:grid-cols-3">
-      <div className="rounded-2xl border border-border-subtle bg-success/5 px-3 py-2.5 backdrop-blur-md">
+      <div className="rounded-2xl border border-glass-border bg-glass-bg px-3 py-2.5 ring-1 ring-success/10">
         <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-success/70">
           Income
         </span>
@@ -41,7 +41,7 @@ export function TransactionSummary({ transactions }: TransactionSummaryProps) {
         </p>
       </div>
 
-      <div className="rounded-2xl border border-border-subtle bg-danger/5 px-3 py-2.5 backdrop-blur-md">
+      <div className="rounded-2xl border border-glass-border bg-glass-bg px-3 py-2.5 ring-1 ring-danger/10">
         <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-danger/70">
           Expense
         </span>
@@ -50,7 +50,7 @@ export function TransactionSummary({ transactions }: TransactionSummaryProps) {
         </p>
       </div>
 
-      <div className="rounded-2xl border border-border-subtle bg-accent-soft/60 px-3 py-2.5 backdrop-blur-md">
+      <div className="rounded-2xl border border-glass-border bg-glass-bg px-3 py-2.5">
         <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-soft">
           Net
         </span>

@@ -20,7 +20,7 @@ function DonutTooltip({ active, payload }: CustomTooltipProps) {
   const item = payload[0].payload;
 
   return (
-    <div className="rounded-xl border border-white/10 bg-background/95 px-3 py-2 shadow-lg backdrop-blur">
+    <div className="rounded-xl border border-glass-border bg-glass-bg-strong px-3 py-2 shadow-lg backdrop-blur-[var(--glass-blur)]">
       <p className="text-[11px] font-medium text-foreground">
         {item.icon} {item.name}
       </p>
@@ -130,15 +130,15 @@ export function CategoryBreakdown({
   const isEmpty = data.length === 0;
 
   return (
-    <div className="rounded-2xl border border-border-subtle bg-accent-soft/40 px-4 py-4">
+    <div className="rounded-2xl border border-glass-border bg-glass-bg px-4 py-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <h3 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-muted-soft">
           By Category
         </h3>
-        <div className="flex gap-1 rounded-xl border border-border-subtle bg-background p-1">
+        <div className="flex gap-1 rounded-xl border border-glass-border bg-glass-bg-strong p-1">
           <button
             onClick={() => setActiveTab("expense")}
-            className={`min-h-[36px] rounded-lg px-3 py-2 text-[12px] font-semibold transition-all active:scale-[0.98] ${
+            className={`min-h-[36px] rounded-lg px-3 py-2 text-[12px] font-semibold transition-all duration-200 active:scale-[0.99] ${
               activeTab === "expense"
                 ? "bg-danger/10 text-danger"
                 : "text-muted active:text-foreground"
@@ -148,7 +148,7 @@ export function CategoryBreakdown({
           </button>
           <button
             onClick={() => setActiveTab("income")}
-            className={`min-h-[36px] rounded-lg px-3 py-2 text-[12px] font-semibold transition-all active:scale-[0.98] ${
+            className={`min-h-[36px] rounded-lg px-3 py-2 text-[12px] font-semibold transition-all duration-200 active:scale-[0.99] ${
               activeTab === "income"
                 ? "bg-success/10 text-success"
                 : "text-muted active:text-foreground"

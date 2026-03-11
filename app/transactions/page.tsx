@@ -135,9 +135,9 @@ export default function TransactionsPage() {
           {isLoading ? (
             <motion.div
               key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.15 }}
               className="flex flex-col gap-4"
             >
@@ -146,9 +146,9 @@ export default function TransactionsPage() {
           ) : (
             <motion.div
               key="content"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
               className="flex flex-col gap-4"
             >

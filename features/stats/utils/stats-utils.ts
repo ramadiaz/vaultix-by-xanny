@@ -118,16 +118,16 @@ export type CategoryBreakdownItem = {
 };
 
 export const CHART_COLORS = [
-  "#6366f1",
-  "#8b5cf6",
-  "#ec4899",
-  "#f97316",
-  "#eab308",
-  "#22c55e",
-  "#14b8a6",
-  "#0ea5e9",
-  "#3b82f6",
-  "#f43f5e",
+  "#06B6D4",
+  "#10B981",
+  "#22D3EE",
+  "#14B8A6",
+  "#6366F1",
+  "#8B5CF6",
+  "#FBBF24",
+  "#F97316",
+  "#F43F5E",
+  "#64748B",
 ];
 
 export function buildCategoryBreakdown(

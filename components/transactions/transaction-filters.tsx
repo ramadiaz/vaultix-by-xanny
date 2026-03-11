@@ -106,7 +106,7 @@ export function TransactionFilters({
         <select
           value={filter.assetUid ?? ""}
           onChange={(event) => handleAssetChange(event.target.value)}
-          className="h-8 flex-1 rounded-xl border border-border-subtle bg-background-soft px-2 text-[11px] text-foreground outline-none focus:border-primary"
+          className="h-8 flex-1 rounded-xl border border-glass-border bg-glass-bg px-2 text-[11px] text-foreground outline-none focus:border-primary"
         >
           <option value="">All wallets</option>
           {activeAssets.map((a) => (

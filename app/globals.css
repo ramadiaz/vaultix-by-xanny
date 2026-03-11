@@ -3,53 +3,63 @@
 :root {
   color-scheme: dark;
 
-  --background: #020617;
-  --background-soft: rgba(15, 23, 42, 0.85);
-  --foreground: #e5edff;
+  --background: #090D14;
+  --background-soft: rgba(9, 13, 20, 0.9);
+  --foreground: #F8FAFC;
 
-  --primary: #38bdf8;
-  --primary-soft: rgba(56, 189, 248, 0.18);
-  --primary-strong: #0ea5e9;
+  --primary: #06B6D4;
+  --primary-soft: rgba(6, 182, 212, 0.22);
+  --primary-strong: #22D3EE;
 
-  --accent: rgba(15, 23, 42, 0.85);
-  --accent-soft: rgba(15, 23, 42, 0.9);
-  --accent-border: rgba(148, 163, 184, 0.3);
+  --accent: rgba(20, 30, 48, 0.9);
+  --accent-soft: rgba(30, 41, 59, 0.95);
+  --accent-border: rgba(148, 163, 184, 0.25);
 
-  --danger: #fb7185;
-  --warning: #fbbf24;
-  --success: #4ade80;
+  --danger: #F43F5E;
+  --warning: #FBBF24;
+  --success: #10B981;
 
-  --border-subtle: rgba(15, 23, 42, 0.9);
-  --border-strong: rgba(148, 163, 184, 0.6);
+  --border-subtle: rgba(30, 41, 59, 0.8);
+  --border-strong: rgba(148, 163, 184, 0.5);
 
-  --muted: #9ca3af;
-  --muted-soft: #6b7280;
+  --muted: #94a3b8;
+  --muted-soft: #64748b;
+
+  --glass-bg: rgba(255, 255, 255, 0.07);
+  --glass-bg-strong: rgba(255, 255, 255, 0.14);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: 12px;
+  --glass-blur-strong: 20px;
 }
 
 [data-theme="light"] {
   color-scheme: light;
 
-  --background: #f4f6fb;
-  --background-soft: rgba(255, 255, 255, 0.92);
-  --foreground: #020617;
+  --background: #F0F9FF;
+  --background-soft: rgba(255, 255, 255, 0.95);
+  --foreground: #0C1222;
 
-  --primary: #0ea5e9;
-  --primary-soft: rgba(14, 165, 233, 0.08);
-  --primary-strong: #0284c7;
+  --primary: #0891B2;
+  --primary-soft: rgba(8, 145, 178, 0.15);
+  --primary-strong: #0E7490;
 
-  --accent: rgba(255, 255, 255, 0.92);
+  --accent: rgba(255, 255, 255, 0.95);
   --accent-soft: rgba(255, 255, 255, 0.98);
-  --accent-border: rgba(148, 163, 184, 0.4);
+  --accent-border: rgba(8, 145, 178, 0.2);
 
-  --danger: #e11d48;
-  --warning: #b45309;
-  --success: #15803d;
+  --danger: #E11D48;
+  --warning: #D97706;
+  --success: #059669;
 
-  --border-subtle: rgba(226, 232, 240, 0.9);
-  --border-strong: rgba(148, 163, 184, 0.8);
+  --border-subtle: rgba(203, 213, 225, 0.9);
+  --border-strong: rgba(100, 116, 139, 0.6);
 
-  --muted: #6b7280;
-  --muted-soft: #9ca3af;
+  --muted: #64748b;
+  --muted-soft: #94a3b8;
+
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-bg-strong: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(8, 145, 178, 0.12);
 }
 
 [data-theme="dark"] {
@@ -78,6 +88,10 @@
 
   --color-muted: var(--muted);
   --color-muted-soft: var(--muted-soft);
+
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-bg-strong: var(--glass-bg-strong);
+  --color-glass-border: var(--glass-border);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -122,7 +136,7 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.06) 50%,
     transparent 100%
   );
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
@@ -136,12 +150,21 @@
 }
 
 body {
-  min-height: 100vh;
+  min-height: 100dvh;
   background:
-    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.16), transparent 55%),
-    radial-gradient(circle at 100% 100%, rgba(129, 140, 248, 0.2), transparent 55%),
-    linear-gradient(160deg, #020617 0%, #020617 32%, #020617 100%);
+    radial-gradient(circle at 0% 0%, rgba(6, 182, 212, 0.22), transparent 45%),
+    radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.15), transparent 45%),
+    radial-gradient(circle at 50% 80%, rgba(6, 182, 212, 0.06), transparent 60%),
+    linear-gradient(165deg, #090D14 0%, #0f172a 40%, #090D14 100%);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
+}
+
+[data-theme="light"] body {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(8, 145, 178, 0.14), transparent 45%),
+    radial-gradient(circle at 100% 100%, rgba(5, 150, 105, 0.1), transparent 45%),
+    radial-gradient(circle at 50% 80%, rgba(6, 182, 212, 0.05), transparent 60%),
+    linear-gradient(165deg, #F0F9FF 0%, #E0F2FE 40%, #F0F9FF 100%);
 }

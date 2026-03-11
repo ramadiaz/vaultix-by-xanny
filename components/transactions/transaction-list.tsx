@@ -1,12 +1,26 @@
 "use client";
 
 import { useMemo } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Category } from "@/features/transactions/types/transaction";
 import { DisplayTransaction } from "@/features/transactions/hooks/use-transactions";
 import { Asset } from "@/features/wallets/types/wallet";
 import { groupTransactionsByDate } from "@/features/transactions/utils/group-transactions-by-date";
 import { formatCurrencyByIso } from "@/features/wallets/utils/format-currency";
 import { TransactionCard } from "./transaction-card";
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 6 },
+  visible: { opacity: 1, y: 0 },
+};
+
+const groupVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.03, delayChildren: 0.01 },
+  },
+};
 
 type TransactionListProps = {
   transactions: DisplayTransaction[];
@@ -25,6 +39,14 @@ export function TransactionList({
   onEdit,
   onDelete,
 }: TransactionListProps) {
+  const shouldReduceMotion = useReducedMotion();
+  const itemVariantsResolved = shouldReduceMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : itemVariants;
+  const groupVariantsResolved = shouldReduceMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : groupVariants;
+
   const assetMap = useMemo(() => {
     const map = new Map<string, Asset>();
     for (const a of assets) {
@@ -40,7 +62,7 @@ export function TransactionList({
 
   if (transactions.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border-subtle bg-background/60 px-4 py-8 text-center text-xs backdrop-blur-md">
+      <div className="rounded-2xl border border-dashed border-glass-border bg-glass-bg px-4 py-8 text-center text-xs">
         <p className="font-medium text-foreground">No transactions found</p>
         <p className="mt-1 text-[11px] text-muted">
           Add your income and expenses or adjust your filters.
@@ -52,7 +74,13 @@ export function TransactionList({
   return (
     <div className="flex flex-col gap-4">
       {dateGroups.map((group) => (
-        <section key={group.dateKey} className="flex flex-col gap-2">
+        <motion.section
+          key={group.dateKey}
+          className="flex flex-col gap-2"
+          variants={groupVariantsResolved}
+          initial="hidden"
+          animate="visible"
+        >
           <div className="flex items-center justify-between px-1">
             <span className="text-[11px] font-semibold text-foreground">
               {group.label}
@@ -82,20 +110,21 @@ export function TransactionList({
                   : undefined;
 
               return (
-                <TransactionCard
-                  key={txn.uid}
-                  transaction={displayTxn}
-                  asset={sourceAsset}
-                  targetAsset={targetAsset}
-                  categories={categories}
-                  getCurrencyIso={getCurrencyIso}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                />
+                <motion.div key={txn.uid} variants={itemVariantsResolved}>
+                  <TransactionCard
+                    transaction={displayTxn}
+                    asset={sourceAsset}
+                    targetAsset={targetAsset}
+                    categories={categories}
+                    getCurrencyIso={getCurrencyIso}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                  />
+                </motion.div>
               );
             })}
           </div>
-        </section>
+        </motion.section>
       ))}
     </div>
   );

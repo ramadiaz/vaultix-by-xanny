@@ -31,7 +31,7 @@ export function TransactionsLoadingSkeleton() {
             {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
-                className="flex items-center gap-3 rounded-2xl border border-border-subtle bg-background/80 px-4 py-3"
+                className="flex items-center gap-3 rounded-2xl border border-glass-border bg-glass-bg px-4 py-3"
               >
                 <Skeleton className="h-9 w-9 shrink-0 rounded-xl" />
                 <div className="flex flex-1 flex-col gap-1">

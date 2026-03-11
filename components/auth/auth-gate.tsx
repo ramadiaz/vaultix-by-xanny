@@ -75,7 +75,7 @@ export function AuthGate({ children }: AuthGateProps) {
               onChange={(e) => setUsername(e.target.value)}
               required
               autoComplete="username"
-              className="h-10 w-full rounded-lg border border-border-subtle bg-background px-3 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary"
+              className="h-10 w-full rounded-2xl border border-glass-border bg-glass-bg px-3 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30"
             />
             <input
               type="password"
@@ -84,10 +84,10 @@ export function AuthGate({ children }: AuthGateProps) {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete={mode === "login" ? "current-password" : "new-password"}
-              className="h-10 w-full rounded-lg border border-border-subtle bg-background px-3 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary"
+              className="h-10 w-full rounded-2xl border border-glass-border bg-glass-bg px-3 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30"
             />
             {error && (
-              <p className="text-xs text-destructive">{error}</p>
+              <p className="text-xs text-danger">{error}</p>
             )}
           </div>
 

@@ -18,7 +18,7 @@ export const SheetOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
-    className={cn("fixed inset-0 z-40 bg-black/40 backdrop-blur-sm", className)}
+    className={cn("fixed inset-0 z-40 bg-black/40 backdrop-blur-[var(--glass-blur-strong)]", className)}
     {...props}
   />
 ));
@@ -34,7 +34,7 @@ export const SheetContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-md rounded-t-3xl bg-background px-5 pb-5 pt-3 shadow-lg outline-none",
+        "fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-md rounded-t-3xl border-t border-glass-border bg-glass-bg-strong px-5 pb-5 pt-3 shadow-lg outline-none backdrop-blur-[var(--glass-blur)]",
         className,
       )}
       {...props}

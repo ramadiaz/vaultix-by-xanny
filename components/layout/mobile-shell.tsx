@@ -26,7 +26,7 @@ export function MobileShell({ title, activeTab, children }: MobileShellProps) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <header className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
+      <header className="flex items-center justify-between border-b border-glass-border bg-glass-bg/80 px-4 py-3 backdrop-blur-[var(--glass-blur)]">
         <div className="flex flex-col gap-0.5">
           <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-soft">
             Vaultix
@@ -56,7 +56,7 @@ export function MobileShell({ title, activeTab, children }: MobileShellProps) {
         {children}
       </main>
 
-      <nav className="sticky bottom-0 z-10 border-t border-border-subtle bg-background/90 backdrop-blur">
+      <nav className="sticky bottom-0 z-10 border-t border-glass-border bg-glass-bg-strong backdrop-blur-[var(--glass-blur-strong)]">
         <div className="mx-auto flex max-w-xl items-center justify-between px-6 py-2.5 text-xs text-muted">
           <Button
             asChild

@@ -32,7 +32,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-white/10 bg-background/95 px-3 py-2 shadow-lg backdrop-blur">
+    <div className="rounded-xl border border-glass-border bg-glass-bg-strong px-3 py-2 shadow-lg backdrop-blur-[var(--glass-blur)]">
       <p className="mb-1 text-[10px] font-medium text-muted">{label}</p>
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-1.5 text-[11px]">
@@ -61,7 +61,7 @@ export function CashflowChart({ data, period }: CashflowChartProps) {
   const hasData = data.some((d) => d.income > 0 || d.expense > 0);
 
   return (
-    <div className="rounded-2xl border border-border-subtle bg-accent-soft/40 px-4 py-4">
+    <div className="rounded-2xl border border-glass-border bg-glass-bg px-4 py-4">
       <h3 className="mb-3 text-[12px] font-semibold uppercase tracking-[0.12em] text-muted-soft">
         Cashflow
       </h3>
@@ -93,19 +93,19 @@ export function CashflowChart({ data, period }: CashflowChartProps) {
               width={36}
             />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
-            <Bar dataKey="income" name="income" fill="#22c55e" radius={[3, 3, 0, 0]} />
-            <Bar dataKey="expense" name="expense" fill="#f43f5e" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="income" name="income" fill="var(--success)" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="expense" name="expense" fill="var(--danger)" radius={[3, 3, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       )}
 
       <div className="mt-3 flex items-center gap-4">
         <div className="flex items-center gap-1.5">
-          <span className="inline-block size-2.5 rounded-full bg-[#22c55e]" />
+          <span className="inline-block size-2.5 rounded-full bg-success" />
           <span className="text-[12px] text-muted-soft">Income</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="inline-block size-2.5 rounded-full bg-[#f43f5e]" />
+          <span className="inline-block size-2.5 rounded-full bg-danger" />
           <span className="text-[12px] text-muted-soft">Expense</span>
         </div>
       </div>

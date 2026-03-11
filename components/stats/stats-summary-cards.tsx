@@ -21,7 +21,7 @@ export function StatsSummaryCards({
 
   return (
     <div className="grid grid-cols-2 gap-3">
-      <div className="min-h-[88px] rounded-2xl border border-border-subtle bg-success/5 px-4 py-4">
+      <div className="min-h-[88px] rounded-2xl border border-glass-border bg-glass-bg px-4 py-4 ring-1 ring-success/10">
         <div className="flex items-center gap-2">
           <TrendingUp className="size-4 shrink-0 text-success/80" />
           <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-success/80">
@@ -33,7 +33,7 @@ export function StatsSummaryCards({
         </p>
       </div>
 
-      <div className="min-h-[88px] rounded-2xl border border-border-subtle bg-danger/5 px-4 py-4">
+      <div className="min-h-[88px] rounded-2xl border border-glass-border bg-glass-bg px-4 py-4 ring-1 ring-danger/10">
         <div className="flex items-center gap-2">
           <TrendingDown className="size-4 shrink-0 text-danger/80" />
           <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-danger/80">
@@ -45,7 +45,7 @@ export function StatsSummaryCards({
         </p>
       </div>
 
-      <div className="min-h-[88px] rounded-2xl border border-border-subtle bg-accent-soft/60 px-4 py-4">
+      <div className="min-h-[88px] rounded-2xl border border-glass-border bg-glass-bg px-4 py-4">
         <div className="flex items-center gap-2">
           <Minus className="size-4 shrink-0 text-muted-soft" />
           <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-soft">
@@ -62,7 +62,7 @@ export function StatsSummaryCards({
         </p>
       </div>
 
-      <div className="min-h-[88px] rounded-2xl border border-border-subtle bg-accent-soft/60 px-4 py-4">
+      <div className="min-h-[88px] rounded-2xl border border-glass-border bg-glass-bg px-4 py-4">
         <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-soft">
           Savings
         </span>

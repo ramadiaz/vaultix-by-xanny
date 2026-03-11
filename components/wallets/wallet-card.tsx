@@ -39,7 +39,7 @@ export function WalletCard({
     <div
       onClick={() => onTap(asset)}
       className={cn(
-        "group relative overflow-hidden rounded-2xl border border-border-subtle bg-background/80 backdrop-blur-md transition-all active:scale-[0.98]",
+        "group relative overflow-hidden rounded-2xl border border-glass-border bg-glass-bg transition-transform duration-150 ease-out active:scale-[0.99]",
         asset.isArchived && "opacity-60",
       )}
     >
@@ -84,7 +84,7 @@ export function WalletCard({
       </div>
 
       {showActions && (
-        <div className="flex items-center gap-1 border-t border-border-subtle bg-background-soft px-3 py-2">
+        <div className="flex items-center gap-1 border-t border-glass-border bg-glass-bg-strong px-3 py-2">
           <button
             type="button"
             onClick={(event) => {

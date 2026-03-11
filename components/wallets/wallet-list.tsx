@@ -1,9 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Asset } from "@/features/wallets/types/wallet";
 import { WalletCard } from "./wallet-card";
 import { cn } from "@/lib/utils/cn";
+
+const listVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.04, delayChildren: 0.02 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0 },
+};
 
 type WalletListTab = "active" | "archived";
 
@@ -31,6 +45,13 @@ export function WalletList({
   onDeleteAsset,
 }: WalletListProps) {
   const [tab, setTab] = useState<WalletListTab>("active");
+  const shouldReduceMotion = useReducedMotion();
+  const listVariantsResolved = shouldReduceMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : listVariants;
+  const itemVariantsResolved = shouldReduceMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : itemVariants;
 
   const hasArchived = archivedAssets.length > 0;
   const assets = tab === "active" ? activeAssets : archivedAssets;
@@ -69,7 +90,7 @@ export function WalletList({
       </div>
 
       {assets.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border-subtle bg-background/60 px-4 py-8 text-center text-xs backdrop-blur-md">
+        <div className="rounded-2xl border border-dashed border-glass-border bg-glass-bg px-4 py-8 text-center text-xs">
           <p className="font-medium text-foreground">
             {tab === "active" ? "No wallets yet" : "No archived wallets"}
           </p>
@@ -80,21 +101,27 @@ export function WalletList({
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <motion.div
+          className="flex flex-col gap-2"
+          variants={listVariantsResolved}
+          initial="hidden"
+          animate="visible"
+        >
           {assets.map((asset) => (
-            <WalletCard
-              key={asset.uid}
-              asset={asset}
-              groupLabel={getGroupLabel(asset.groupUid)}
-              currencyIso={getCurrencyIso(asset.currencyUid)}
-              onTap={onTapAsset}
-              onEdit={onEditAsset}
-              onArchive={onArchiveAsset}
-              onRestore={onRestoreAsset}
-              onDelete={onDeleteAsset}
-            />
+            <motion.div key={asset.uid} variants={itemVariantsResolved}>
+              <WalletCard
+                asset={asset}
+                groupLabel={getGroupLabel(asset.groupUid)}
+                currencyIso={getCurrencyIso(asset.currencyUid)}
+                onTap={onTapAsset}
+                onEdit={onEditAsset}
+                onArchive={onArchiveAsset}
+                onRestore={onRestoreAsset}
+                onDelete={onDeleteAsset}
+              />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
     </section>
   );

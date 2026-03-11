@@ -26,7 +26,7 @@ export function WalletBalanceSummary({ assets, getCurrencyIso }: WalletBalanceSu
 
   if (!primarySummary) {
     return (
-      <section className="rounded-2xl border border-border-subtle bg-accent-soft/60 px-4 py-4 backdrop-blur-md">
+      <section className="rounded-2xl border border-glass-border bg-glass-bg px-4 py-4">
         <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-soft">
           Total Balance
         </span>
@@ -38,7 +38,7 @@ export function WalletBalanceSummary({ assets, getCurrencyIso }: WalletBalanceSu
   }
 
   return (
-    <section className="rounded-2xl border border-border-subtle bg-accent-soft/60 px-4 py-4 backdrop-blur-md">
+    <section className="rounded-2xl border border-glass-border bg-glass-bg px-4 py-4">
       <div className="flex items-baseline justify-between">
         <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-soft">
           Total Balance

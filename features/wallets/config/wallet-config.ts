@@ -55,17 +55,23 @@ export const DEFAULT_CURRENCIES: Currency[] = [
 export const ASSET_COLOR_MAP: Record<string, { bg: string; text: string; ring: string }> = {
   sky: { bg: "bg-sky-500/15", text: "text-sky-400", ring: "ring-sky-500/30" },
   emerald: { bg: "bg-emerald-500/15", text: "text-emerald-400", ring: "ring-emerald-500/30" },
+  blue: { bg: "bg-blue-500/15", text: "text-blue-400", ring: "ring-blue-500/30" },
+  slate: { bg: "bg-slate-500/15", text: "text-slate-400", ring: "ring-slate-500/30" },
+  teal: { bg: "bg-teal-500/15", text: "text-teal-400", ring: "ring-teal-500/30" },
+  indigo: { bg: "bg-indigo-500/15", text: "text-indigo-400", ring: "ring-indigo-500/30" },
   violet: { bg: "bg-violet-500/15", text: "text-violet-400", ring: "ring-violet-500/30" },
   rose: { bg: "bg-rose-500/15", text: "text-rose-400", ring: "ring-rose-500/30" },
   amber: { bg: "bg-amber-500/15", text: "text-amber-400", ring: "ring-amber-500/30" },
-  slate: { bg: "bg-slate-500/15", text: "text-slate-400", ring: "ring-slate-500/30" },
 };
 
 export const ASSET_COLOR_OPTIONS: string[] = [
   "sky",
   "emerald",
+  "blue",
+  "slate",
+  "teal",
+  "indigo",
   "violet",
   "rose",
   "amber",
-  "slate",
 ];
