@@ -6,6 +6,7 @@ import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useSync } from "@/features/sync/context/sync-provider";
+import { useHasPendingSync } from "@/features/sync/hooks/use-has-pending-sync";
 
 type MobileTab = "wallets" | "transactions" | "stats" | "settings";
 
@@ -18,6 +19,7 @@ type MobileShellProps = {
 export function MobileShell({ title, activeTab, children }: MobileShellProps) {
   const { user } = useAuth();
   const { sync, state: syncState } = useSync();
+  const hasPendingSync = useHasPendingSync();
   const isSyncing = syncState.status === "syncing";
 
   return (
@@ -30,21 +32,29 @@ export function MobileShell({ title, activeTab, children }: MobileShellProps) {
           <h1 className="text-lg font-semibold text-foreground">{title}</h1>
         </div>
         {user && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-9 w-9 shrink-0 p-0"
-            onClick={() => sync()}
-            disabled={isSyncing}
-            aria-label="Sync"
-          >
-            {isSyncing ? (
-              <RefreshCw className="h-5 w-5 animate-[spinner-rotate_0.8s_linear_infinite]" />
-            ) : (
-              <RefreshCw className="h-5 w-5" />
+          <div className="relative shrink-0">
+            {hasPendingSync && (
+              <span
+                className="absolute -left-0.5 -top-0.5 h-2 w-2 rounded-full bg-amber-500"
+                aria-hidden
+              />
             )}
-          </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-9 w-9 shrink-0 p-0"
+              onClick={() => sync()}
+              disabled={isSyncing}
+              aria-label="Sync"
+            >
+              {isSyncing ? (
+                <RefreshCw className="h-5 w-5 animate-[spinner-rotate_0.8s_linear_infinite]" />
+              ) : (
+                <RefreshCw className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
         )}
       </header>
 

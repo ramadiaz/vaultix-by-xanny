@@ -46,9 +46,19 @@ function save(state: PendingSyncState): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    window.dispatchEvent(new CustomEvent("vaultix:pending-sync-changed"));
   } catch {
     return;
   }
+}
+
+export function hasPendingSyncData(): boolean {
+  const state = load();
+  return (
+    state.deletedTransactionUids.length > 0 ||
+    state.deletedAssetUids.length > 0 ||
+    state.deletedCategoryUids.length > 0
+  );
 }
 
 export function getDeletedTransactionUids(): Set<string> {
@@ -112,4 +122,8 @@ export function clearDeletedUidsPresentIn(
     (uid) => !catSet.has(uid)
   );
   save(state);
+}
+
+export function clearAllPendingSync(): void {
+  save(getEmpty());
 }

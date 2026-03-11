@@ -6,7 +6,7 @@ import {
 import { VaultixExportData } from "@/features/import-export/types/import-export";
 import { sync as syncApi } from "@/lib/api/sync.api";
 import { computeDelta, setLastSynced } from "@/features/sync/services/delta.service";
-import { clearDeletedUidsPresentIn } from "@/features/sync/services/pending-sync.service";
+import { clearAllPendingSync } from "@/features/sync/services/pending-sync.service";
 
 const DATA_RELOAD_EVENT = "vaultix:data-reload";
 
@@ -48,11 +48,7 @@ export async function performSync(): Promise<void> {
   );
 
   setLastSynced(normalized);
-  clearDeletedUidsPresentIn(
-    normalized.transactions.map((t) => t.uid),
-    normalized.assets.map((a) => a.uid),
-    normalized.categories.map((c) => c.uid)
-  );
+  clearAllPendingSync();
 
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(DATA_RELOAD_EVENT));
