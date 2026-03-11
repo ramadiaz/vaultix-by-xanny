@@ -318,472 +318,467 @@ export default function SettingsPage() {
   return (
     <AuthGate>
       <MobileShell title="Settings" activeTab="settings">
-        <div className="flex flex-col gap-4">
-          <Card className="flex flex-col gap-3">
-            <h3 className="text-sm font-semibold text-foreground">Export</h3>
-            <p className="text-[11px] leading-relaxed text-foreground/80">
-              Download your data as a backup file.
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <Button type="button" onClick={handleExportJson} className="h-9">
-                Export .json
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleExportMmbak}
-                className="h-9"
-                disabled={isExportingMmbak}
-              >
-                {isExportingMmbak ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <LoadingSpinner size="sm" />
-                    Exporting
-                  </span>
-                ) : (
-                  "Export .mmbak"
-                )}
-              </Button>
-            </div>
-          </Card>
-
-          <Card className="flex flex-col gap-3">
-            <h3 className="text-sm font-semibold text-foreground">
-              Sync
-            </h3>
-            <p className="text-[11px] leading-relaxed text-foreground/80">
-              Sync your data to the cloud.
-            </p>
-            <div className="flex flex-col gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                className="h-9"
-                onClick={syncToBackup}
-                disabled={backupState.status === "syncing"}
-              >
-                {backupState.status === "syncing" ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <LoadingSpinner size="sm" />
-                    Syncing
-                  </span>
-                ) : (
-                  "Sync"
-                )}
-              </Button>
-            </div>
-            {backupState.status === "synced" && (
-              <div className="flex flex-col gap-1">
-                <p className="text-[12px] font-medium text-success">
-                  {backupState.message}
-                </p>
+        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[1fr_1fr] lg:items-start lg:gap-6">
+          {/* Left column on desktop: Export / Sync / Import / Account */}
+          <div className="flex flex-col gap-4">
+            <Card className="flex flex-col gap-3">
+              <h3 className="text-sm font-semibold text-foreground">Export</h3>
+              <p className="text-[11px] leading-relaxed text-foreground/80">
+                Download your data as a backup file.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button type="button" onClick={handleExportJson} className="h-9">
+                  Export .json
+                </Button>
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-fit text-xs"
-                  onClick={clearBackupState}
+                  variant="secondary"
+                  onClick={handleExportMmbak}
+                  className="h-9"
+                  disabled={isExportingMmbak}
                 >
-                  Dismiss
+                  {isExportingMmbak ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <LoadingSpinner size="sm" />
+                      Exporting
+                    </span>
+                  ) : (
+                    "Export .mmbak"
+                  )}
                 </Button>
               </div>
-            )}
-            {backupState.status === "error" && (
-              <div className="flex flex-col gap-1">
-                <p className="text-[12px] font-medium text-danger">
-                  {backupState.message}
-                </p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-fit text-xs"
-                  onClick={clearBackupState}
-                >
-                  Dismiss
-                </Button>
-              </div>
-            )}
-          </Card>
-
-          <Card className="flex flex-col gap-3">
-            <h3 className="text-sm font-semibold text-foreground">Import</h3>
-
-            <div className="flex flex-col gap-2">
-              <span className="text-[11px] font-medium text-foreground/80">Import mode</span>
-              <div className="flex gap-1">
-                <button
-                  type="button"
-                  onClick={() => setImportMode("merge")}
-                  className={cn(
-                    "flex-1 rounded-xl px-3 py-2 text-center text-[11px] font-medium transition",
-                    importMode === "merge"
-                      ? "bg-primary/20 text-primary ring-1 ring-primary/40"
-                      : "bg-glass-bg border border-glass-border text-foreground/90",
-                  )}
-                >
-                  Merge (keep existing)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setImportMode("replace")}
-                  className={cn(
-                    "flex-1 rounded-xl px-3 py-2 text-center text-[11px] font-medium transition",
-                    importMode === "replace"
-                      ? "bg-danger/20 text-danger ring-1 ring-danger/40"
-                      : "bg-glass-bg border border-glass-border text-foreground/90",
-                  )}
-                >
-                  Replace (overwrite all)
-                </button>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <p className="text-[11px] leading-relaxed text-foreground/80">
-                Money Manager backup (.mmbak):
-              </p>
-              <input
-                ref={mmbakInputRef}
-                type="file"
-                accept=".mmbak"
-                onChange={handleMmbakFileSelect}
-                className="hidden"
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                className="h-9"
-                onClick={() => mmbakInputRef.current?.click()}
-              >
-                Import .mmbak
-              </Button>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <p className="text-[11px] leading-relaxed text-foreground/80">
-                Money Manager Excel export (.xls/.xlsx):
-              </p>
-              <input
-                ref={excelInputRef}
-                type="file"
-                accept=".xls,.xlsx"
-                onChange={handleExcelFileSelect}
-                className="hidden"
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                className="h-9"
-                onClick={() => excelInputRef.current?.click()}
-              >
-                Import .xls / .xlsx
-              </Button>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <p className="text-[11px] leading-relaxed text-foreground/80">
-                Vaultix backup file (.json):
-              </p>
-              <input
-                ref={jsonInputRef}
-                type="file"
-                accept=".json"
-                onChange={handleJsonFileSelect}
-                className="hidden"
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                className="h-9"
-                onClick={() => jsonInputRef.current?.click()}
-              >
-                Import .json
-              </Button>
-            </div>
-          </Card>
-
-          {importStatus.state === "loading" && (
-            <Card className="flex flex-col items-center justify-center gap-3 py-8">
-              <LoadingSpinner size="lg" />
-              <p className="text-xs font-medium text-foreground/80">
-                Parsing .mmbak file
-              </p>
             </Card>
-          )}
 
-          {importStatus.state === "preview" && (
-            <Card className="flex flex-col gap-3 border-primary/30">
+            <Card className="flex flex-col gap-3">
               <h3 className="text-sm font-semibold text-foreground">
-                Import preview
+                Sync
               </h3>
-              <p className="text-[11px] text-foreground/80">
-                Source: <span className="font-medium text-foreground">{sourceLabel[importStatus.source]}</span>
+              <p className="text-[11px] leading-relaxed text-foreground/80">
+                Sync your data to the cloud.
               </p>
-              <div className="grid grid-cols-2 gap-2 text-[11px]">
-                <div className="rounded-xl bg-background-soft px-3 py-2">
-                  <span className="text-foreground/75">Wallets</span>
-                  <p className="font-semibold text-foreground">
-                    {importStatus.result.summary.totalAssets}
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="h-9"
+                  onClick={syncToBackup}
+                  disabled={backupState.status === "syncing"}
+                >
+                  {backupState.status === "syncing" ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <LoadingSpinner size="sm" />
+                      Syncing
+                    </span>
+                  ) : (
+                    "Sync"
+                  )}
+                </Button>
+              </div>
+              {backupState.status === "synced" && (
+                <div className="flex flex-col gap-1">
+                  <p className="text-[12px] font-medium text-success">
+                    {backupState.message}
                   </p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-fit text-xs"
+                    onClick={clearBackupState}
+                  >
+                    Dismiss
+                  </Button>
                 </div>
-                <div className="rounded-xl bg-background-soft px-3 py-2">
-                  <span className="text-foreground/75">Transactions</span>
-                  <p className="font-semibold text-foreground">
-                    {importStatus.result.summary.totalTransactions}
+              )}
+              {backupState.status === "error" && (
+                <div className="flex flex-col gap-1">
+                  <p className="text-[12px] font-medium text-danger">
+                    {backupState.message}
                   </p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-fit text-xs"
+                    onClick={clearBackupState}
+                  >
+                    Dismiss
+                  </Button>
                 </div>
-                <div className="rounded-xl bg-background-soft px-3 py-2">
-                  <span className="text-foreground/75">Categories</span>
-                  <p className="font-semibold text-foreground">
-                    {importStatus.result.summary.totalCategories}
-                  </p>
+              )}
+            </Card>
+
+            <Card className="flex flex-col gap-3">
+              <h3 className="text-sm font-semibold text-foreground">Import</h3>
+
+              <div className="flex flex-col gap-2">
+                <span className="text-[11px] font-medium text-foreground/80">Import mode</span>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setImportMode("merge")}
+                    className={cn(
+                      "flex-1 rounded-xl px-3 py-2 text-center text-[11px] font-medium transition",
+                      importMode === "merge"
+                        ? "bg-primary/20 text-primary ring-1 ring-primary/40"
+                        : "bg-glass-bg border border-glass-border text-foreground/90",
+                    )}
+                  >
+                    Merge (keep existing)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImportMode("replace")}
+                    className={cn(
+                      "flex-1 rounded-xl px-3 py-2 text-center text-[11px] font-medium transition",
+                      importMode === "replace"
+                        ? "bg-danger/20 text-danger ring-1 ring-danger/40"
+                        : "bg-glass-bg border border-glass-border text-foreground/90",
+                    )}
+                  >
+                    Replace (overwrite all)
+                  </button>
                 </div>
-                {importStatus.result.summary.skippedTransferIn > 0 && (
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <p className="text-[11px] leading-relaxed text-foreground/80">
+                  Money Manager backup (.mmbak):
+                </p>
+                <input
+                  ref={mmbakInputRef}
+                  type="file"
+                  accept=".mmbak"
+                  onChange={handleMmbakFileSelect}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="h-9"
+                  onClick={() => mmbakInputRef.current?.click()}
+                >
+                  Import .mmbak
+                </Button>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <p className="text-[11px] leading-relaxed text-foreground/80">
+                  Money Manager Excel export (.xls/.xlsx):
+                </p>
+                <input
+                  ref={excelInputRef}
+                  type="file"
+                  accept=".xls,.xlsx"
+                  onChange={handleExcelFileSelect}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="h-9"
+                  onClick={() => excelInputRef.current?.click()}
+                >
+                  Import .xls / .xlsx
+                </Button>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <p className="text-[11px] leading-relaxed text-foreground/80">
+                  Vaultix backup file (.json):
+                </p>
+                <input
+                  ref={jsonInputRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleJsonFileSelect}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="h-9"
+                  onClick={() => jsonInputRef.current?.click()}
+                >
+                  Import .json
+                </Button>
+              </div>
+            </Card>
+
+            {importStatus.state === "loading" && (
+              <Card className="flex flex-col items-center justify-center gap-3 py-8">
+                <LoadingSpinner size="lg" />
+                <p className="text-xs font-medium text-foreground/80">
+                  Parsing .mmbak file
+                </p>
+              </Card>
+            )}
+
+            {importStatus.state === "preview" && (
+              <Card className="flex flex-col gap-3 border-primary/30">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Import preview
+                </h3>
+                <p className="text-[11px] text-foreground/80">
+                  Source: <span className="font-medium text-foreground">{sourceLabel[importStatus.source]}</span>
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
                   <div className="rounded-xl bg-background-soft px-3 py-2">
-                    <span className="text-foreground/75">Skipped (Transfer-In)</span>
+                    <span className="text-foreground/75">Wallets</span>
                     <p className="font-semibold text-foreground">
-                      {importStatus.result.summary.skippedTransferIn}
+                      {importStatus.result.summary.totalAssets}
                     </p>
                   </div>
-                )}
-              </div>
+                  <div className="rounded-xl bg-background-soft px-3 py-2">
+                    <span className="text-foreground/75">Transactions</span>
+                    <p className="font-semibold text-foreground">
+                      {importStatus.result.summary.totalTransactions}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-background-soft px-3 py-2">
+                    <span className="text-foreground/75">Categories</span>
+                    <p className="font-semibold text-foreground">
+                      {importStatus.result.summary.totalCategories}
+                    </p>
+                  </div>
+                  {importStatus.result.summary.skippedTransferIn > 0 && (
+                    <div className="rounded-xl bg-background-soft px-3 py-2">
+                      <span className="text-foreground/75">Skipped (Transfer-In)</span>
+                      <p className="font-semibold text-foreground">
+                        {importStatus.result.summary.skippedTransferIn}
+                      </p>
+                    </div>
+                  )}
+                </div>
 
-              <p className="text-[11px] text-foreground/80">
-                Mode:{" "}
-                <span className="font-medium text-foreground">
-                  {importMode === "merge" ? "Merge" : "Replace"}
-                </span>
-                {importMode === "replace" && (
-                  <span className="ml-1 text-danger">
-                    (this will overwrite all existing data)
+                <p className="text-[11px] text-foreground/80">
+                  Mode:{" "}
+                  <span className="font-medium text-foreground">
+                    {importMode === "merge" ? "Merge" : "Replace"}
+                  </span>
+                  {importMode === "replace" && (
+                    <span className="ml-1 text-danger">
+                      (this will overwrite all existing data)
+                    </span>
+                  )}
+                </p>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="flex-1 h-9"
+                    onClick={handleCancelImport}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    className="flex-1 h-9"
+                    onClick={handleConfirmImport}
+                  >
+                    Confirm import
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {importStatus.state === "success" && (
+              <Card className="border-success/30">
+                <p className="text-[12px] font-medium text-success">
+                  {importStatus.message}
+                </p>
+                <p className="mt-1 text-[11px] text-foreground/80">
+                  Reload the page to see your imported data.
+                </p>
+              </Card>
+            )}
+
+            {importStatus.state === "error" && (
+              <Card className="border-danger/30">
+                <p className="text-[12px] font-medium text-danger">
+                  {importStatus.message}
+                </p>
+              </Card>
+            )}
+
+            <Card className="flex flex-col gap-3">
+              <h3 className="text-sm font-semibold text-foreground">Account</h3>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 border-danger/40 text-danger hover:bg-danger/10 hover:border-danger/60"
+                onClick={signOut}
+              >
+                Sign out
+              </Button>
+            </Card>
+
+          </div>
+
+          {/* Right column on desktop: Categories */}
+          <div className="flex flex-col gap-4">
+            <Card className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-foreground">Categories</h3>
+                {!isCategoriesLoading && (
+                  <span className="text-[11px] text-foreground/80">
+                    {categories.filter((c) => !c.isDel && c.status === 0).length} total
                   </span>
                 )}
-              </p>
-
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="flex-1 h-9"
-                  onClick={handleCancelImport}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  className="flex-1 h-9"
-                  onClick={handleConfirmImport}
-                >
-                  Confirm import
-                </Button>
               </div>
-            </Card>
-          )}
 
-          {importStatus.state === "success" && (
-            <Card className="border-success/30">
-              <p className="text-[12px] font-medium text-success">
-                {importStatus.message}
-              </p>
-              <p className="mt-1 text-[11px] text-foreground/80">
-                Reload the page to see your imported data.
-              </p>
-            </Card>
-          )}
+              <div className="flex gap-1 rounded-xl bg-background-soft p-1">
+                {(["income", "expense"] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setNewCategoryType(t)}
+                    className={cn(
+                      "flex-1 rounded-lg py-2 text-center text-[11px] font-semibold capitalize transition",
+                      newCategoryType === t
+                        ? t === "income"
+                          ? "bg-success/15 text-success"
+                          : "bg-danger/15 text-danger"
+                        : "text-foreground/85",
+                    )}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
 
-          {importStatus.state === "error" && (
-            <Card className="border-danger/30">
-              <p className="text-[12px] font-medium text-danger">
-                {importStatus.message}
-              </p>
-            </Card>
-          )}
+              <div className="flex flex-col divide-y divide-border-subtle overflow-hidden rounded-2xl border border-border-subtle">
+                {categories
+                  .filter(
+                    (c) =>
+                      !c.isDel &&
+                      c.status === 0 &&
+                      c.type === (newCategoryType === "income" ? 0 : 1),
+                  )
+                  .sort((a, b) => a.orderSeq - b.orderSeq)
+                  .map((category) => {
+                    const isEditingRow = editingCategoryUid === category.uid;
+                    const firstWord = category.name.split(" ")[0];
+                    const rest = category.name.split(" ").slice(1).join(" ") || category.name;
+                    return (
+                      <div key={category.uid} className="bg-background-soft">
+                        {isEditingRow ? (
+                          <div className="flex flex-col gap-2 px-4 py-3">
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={editingIcon}
+                                onChange={(event) => setEditingIcon(event.target.value)}
+                                style={{ width: "2.75rem", flexShrink: 0 }}
+                                className="h-10 rounded-xl border border-border-subtle bg-background text-center text-lg outline-none focus:border-primary"
+                              />
+                              <input
+                                type="text"
+                                value={editingName}
+                                onChange={(event) => setEditingName(event.target.value)}
+                                className="h-10 min-w-0 flex-1 rounded-xl border border-border-subtle bg-background px-3 text-sm text-foreground outline-none focus:border-primary"
+                                placeholder="Category name"
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                className="h-9 flex-1"
+                                onClick={handleSaveCategoryEdit}
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                className="h-9 flex-1"
+                                onClick={() => setEditingCategoryUid(null)}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3 px-4 py-3">
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-background text-lg">
+                              {firstWord}
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                              {rest}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => startEditCategory(category)}
+                              className="shrink-0 rounded-xl px-3 py-2 text-[11px] font-semibold text-primary active:bg-primary/10"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCategoryClick(category)}
+                              className="shrink-0 rounded-xl px-3 py-2 text-[11px] font-semibold text-danger active:bg-danger/10"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
 
-          <Card className="flex flex-col gap-3">
-            <h3 className="text-sm font-semibold text-foreground">Account</h3>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-9 border-danger/40 text-danger hover:bg-danger/10 hover:border-danger/60"
-              onClick={signOut}
-            >
-              Sign out
-            </Button>
-          </Card>
-
-          <Card className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">Categories</h3>
-              {!isCategoriesLoading && (
-                <span className="text-[11px] text-foreground/80">
-                  {categories.filter((c) => !c.isDel && c.status === 0).length} total
-                </span>
-              )}
-            </div>
-
-            <div className="flex gap-1 rounded-xl bg-background-soft p-1">
-              {(["income", "expense"] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setNewCategoryType(t)}
-                  className={cn(
-                    "flex-1 rounded-lg py-2 text-center text-[11px] font-semibold capitalize transition",
-                    newCategoryType === t
-                      ? t === "income"
-                        ? "bg-success/15 text-success"
-                        : "bg-danger/15 text-danger"
-                      : "text-foreground/85",
-                  )}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex flex-col divide-y divide-border-subtle overflow-hidden rounded-2xl border border-border-subtle">
-              {categories
-                .filter(
+                {categories.filter(
                   (c) =>
                     !c.isDel &&
                     c.status === 0 &&
                     c.type === (newCategoryType === "income" ? 0 : 1),
-                )
-                .sort((a, b) => a.orderSeq - b.orderSeq)
-                .map((category) => {
-                  const isEditingRow = editingCategoryUid === category.uid;
-                  const firstWord = category.name.split(" ")[0];
-                  const rest = category.name.split(" ").slice(1).join(" ") || category.name;
-                  return (
-                    <div key={category.uid} className="bg-background-soft">
-                      {isEditingRow ? (
-                        <div className="flex flex-col gap-2 px-4 py-3">
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              value={editingIcon}
-                              onChange={(event) => setEditingIcon(event.target.value)}
-                              style={{ width: "2.75rem", flexShrink: 0 }}
-                              className="h-10 rounded-xl border border-border-subtle bg-background text-center text-lg outline-none focus:border-primary"
-                            />
-                            <input
-                              type="text"
-                              value={editingName}
-                              onChange={(event) => setEditingName(event.target.value)}
-                              className="h-10 min-w-0 flex-1 rounded-xl border border-border-subtle bg-background px-3 text-sm text-foreground outline-none focus:border-primary"
-                              placeholder="Category name"
-                            />
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              type="button"
-                              size="sm"
-                              className="h-9 flex-1"
-                              onClick={handleSaveCategoryEdit}
-                            >
-                              Save
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              className="h-9 flex-1"
-                              onClick={() => setEditingCategoryUid(null)}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-3 px-4 py-3">
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-background text-lg">
-                            {firstWord}
-                          </span>
-                          <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-                            {rest}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => startEditCategory(category)}
-                            className="shrink-0 rounded-xl px-3 py-2 text-[11px] font-semibold text-primary active:bg-primary/10"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteCategoryClick(category)}
-                            className="shrink-0 rounded-xl px-3 py-2 text-[11px] font-semibold text-danger active:bg-danger/10"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )}
+                ).length === 0 && (
+                    <div className="flex flex-col items-center gap-1 bg-background-soft px-4 py-8 text-center">
+                      <p className="text-[12px] font-medium text-foreground">
+                        No {newCategoryType} categories
+                      </p>
+                      <p className="text-[11px] text-foreground/80">Add one below.</p>
                     </div>
-                  );
-                })}
-
-              {categories.filter(
-                (c) =>
-                  !c.isDel &&
-                  c.status === 0 &&
-                  c.type === (newCategoryType === "income" ? 0 : 1),
-              ).length === 0 && (
-                <div className="flex flex-col items-center gap-1 bg-background-soft px-4 py-8 text-center">
-                  <p className="text-[12px] font-medium text-foreground">
-                    No {newCategoryType} categories
-                  </p>
-                  <p className="text-[11px] text-foreground/80">Add one below.</p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-3 rounded-2xl border border-border-subtle bg-background-soft px-4 py-4">
-              <p className="text-[11px] font-medium text-foreground/80">
-                New {newCategoryType} category
-              </p>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={newCategoryIcon}
-                  onChange={(event) => setNewCategoryIcon(event.target.value)}
-                  style={{ width: "2.75rem", flexShrink: 0 }}
-                  className="h-11 rounded-2xl border border-border-subtle bg-background text-center text-xl outline-none focus:border-primary"
-                  placeholder="📌"
-                />
-                <input
-                  type="text"
-                  value={newCategoryName}
-                  onChange={(event) => setNewCategoryName(event.target.value)}
-                  className="h-11 min-w-0 flex-1 rounded-2xl border border-border-subtle bg-background px-3 text-sm text-foreground outline-none focus:border-primary"
-                  placeholder="Category name"
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") handleAddCategoryClick();
-                  }}
-                />
+                  )}
               </div>
-              <Button
-                type="button"
-                className="h-11 w-full"
-                onClick={handleAddCategoryClick}
-                disabled={!newCategoryName.trim()}
-              >
-                Add category
-              </Button>
-            </div>
-          </Card>
 
-          <Card className="flex flex-col gap-3">
-            <h3 className="text-sm font-semibold text-foreground">Account</h3>
-            <Button
-              type="button"
-              variant="secondary"
-              className="h-9 w-fit"
-              onClick={signOut}
-            >
-              Sign out
-            </Button>
-          </Card>
+              <div className="flex flex-col gap-3 rounded-2xl border border-border-subtle bg-background-soft px-4 py-4">
+                <p className="text-[11px] font-medium text-foreground/80">
+                  New {newCategoryType} category
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newCategoryIcon}
+                    onChange={(event) => setNewCategoryIcon(event.target.value)}
+                    style={{ width: "2.75rem", flexShrink: 0 }}
+                    className="h-11 rounded-2xl border border-border-subtle bg-background text-center text-xl outline-none focus:border-primary"
+                    placeholder="📌"
+                  />
+                  <input
+                    type="text"
+                    value={newCategoryName}
+                    onChange={(event) => setNewCategoryName(event.target.value)}
+                    className="h-11 min-w-0 flex-1 rounded-2xl border border-border-subtle bg-background px-3 text-sm text-foreground outline-none focus:border-primary"
+                    placeholder="Category name"
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") handleAddCategoryClick();
+                    }}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  className="h-11 w-full"
+                  onClick={handleAddCategoryClick}
+                  disabled={!newCategoryName.trim()}
+                >
+                  Add category
+                </Button>
+              </div>
+            </Card>
+          </div>
         </div>
       </MobileShell>
     </AuthGate>

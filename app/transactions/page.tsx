@@ -128,9 +128,20 @@ export default function TransactionsPage() {
     );
   }
 
+  const addButton = (
+    <Button
+      type="button"
+      size="sm"
+      className="shadow-lg shadow-primary/25"
+      onClick={handleCreateOpen}
+    >
+      + Add transaction
+    </Button>
+  );
+
   return (
     <AuthGate>
-      <MobileShell title="Transactions" activeTab="transactions">
+      <MobileShell title="Transactions" activeTab="transactions" desktopAction={addButton}>
         <AnimatePresence mode="wait">
           {isLoading ? (
             <motion.div
@@ -150,33 +161,54 @@ export default function TransactionsPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="flex flex-col gap-4"
+              className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6"
             >
-              <TransactionSummary transactions={displayTransactions} />
+              {/* Left sidebar: summary + filters (desktop sticky) */}
+              <div className="flex flex-col gap-3 lg:w-64 lg:shrink-0 lg:sticky lg:top-0">
+                <TransactionSummary transactions={displayTransactions} />
 
-              <TransactionFilters
-                filter={filter}
-                assets={assets}
-                onFilterChange={setFilter}
-              />
+                <div className="gradient-border min-w-0 overflow-hidden rounded-2xl px-4 py-4">
+                  <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-soft">
+                    Filters
+                  </p>
+                  <TransactionFilters
+                    filter={filter}
+                    assets={assets}
+                    onFilterChange={setFilter}
+                  />
+                </div>
+              </div>
 
-              <TransactionList
-                transactions={displayTransactions}
-                assets={assets}
-                categories={categories}
-                getCurrencyIso={getCurrencyIso}
-                onEdit={handleEditOpen}
-                onDelete={handleDeleteOpen}
-              />
-              <div className="h-40" />
+              {/* Right: transaction list */}
+              <div className="flex flex-col gap-3 lg:min-w-0 lg:flex-1">
+                {/* Mobile: show summary + filters above list */}
+                <div className="lg:hidden">
+                  <TransactionFilters
+                    filter={filter}
+                    assets={assets}
+                    onFilterChange={setFilter}
+                  />
+                </div>
+
+                <TransactionList
+                  transactions={displayTransactions}
+                  assets={assets}
+                  categories={categories}
+                  getCurrencyIso={getCurrencyIso}
+                  onEdit={handleEditOpen}
+                  onDelete={handleDeleteOpen}
+                />
+                <div className="h-40 lg:hidden" />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
+        {/* Mobile-only fixed add button */}
         <Button
           type="button"
           size="lg"
-          className="fixed bottom-20 right-4 z-20 shadow-xl shadow-primary/30"
+          className="fixed bottom-20 right-4 z-20 shadow-xl shadow-primary/30 lg:hidden"
           onClick={handleCreateOpen}
         >
           Add transaction

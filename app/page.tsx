@@ -161,9 +161,20 @@ export default function HomePage() {
     addIncomeExpense(txn);
   }
 
+  const addButton = (
+    <Button
+      type="button"
+      size="sm"
+      className="shadow-lg shadow-primary/25"
+      onClick={handleCreateOpen}
+    >
+      + Add wallet
+    </Button>
+  );
+
   return (
     <AuthGate>
-      <MobileShell title="Overview" activeTab="wallets">
+      <MobileShell title="Overview" activeTab="wallets" desktopAction={addButton}>
         <AnimatePresence mode="wait">
           {isLoading ? (
             <motion.div
@@ -183,32 +194,84 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="flex flex-col gap-4"
+              className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6"
             >
-            <WalletBalanceSummary
-              assets={activeAssets}
-              getCurrencyIso={getCurrencyIso}
-            />
+              {/* Left column: wallet list */}
+              <div className="flex flex-col gap-4 lg:min-w-0 lg:flex-1">
+                {/* Mobile-only balance summary (top) */}
+                <div className="lg:hidden">
+                  <WalletBalanceSummary
+                    assets={activeAssets}
+                    getCurrencyIso={getCurrencyIso}
+                  />
+                </div>
 
-            <WalletList
-              activeAssets={activeAssets}
-              archivedAssets={archivedAssets}
-              getGroupLabel={getGroupLabel}
-              getCurrencyIso={getCurrencyIso}
-              onTapAsset={handleTapAsset}
-              onEditAsset={handleEditOpen}
-              onArchiveAsset={(asset) => archiveAsset(asset.uid)}
-              onRestoreAsset={(asset) => restoreAsset(asset.uid)}
-              onDeleteAsset={handleDeleteOpen}
-            />
+                <WalletList
+                  activeAssets={activeAssets}
+                  archivedAssets={archivedAssets}
+                  getGroupLabel={getGroupLabel}
+                  getCurrencyIso={getCurrencyIso}
+                  onTapAsset={handleTapAsset}
+                  onEditAsset={handleEditOpen}
+                  onArchiveAsset={(asset) => archiveAsset(asset.uid)}
+                  onRestoreAsset={(asset) => restoreAsset(asset.uid)}
+                  onDeleteAsset={handleDeleteOpen}
+                />
+              </div>
+
+              {/* Right column: desktop summary + quick add (sticky) */}
+              <div className="hidden lg:flex lg:w-72 lg:shrink-0 lg:flex-col lg:gap-4 lg:sticky lg:top-0">
+                <WalletBalanceSummary
+                  assets={activeAssets}
+                  getCurrencyIso={getCurrencyIso}
+                />
+
+                {/* Desktop quick-add card */}
+                <div className="gradient-border rounded-2xl px-4 py-4">
+                  <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-soft">
+                    Quick Add
+                  </p>
+                  <Button
+                    type="button"
+                    className="w-full shadow-md shadow-primary/20"
+                    onClick={handleCreateOpen}
+                  >
+                    + New Wallet
+                  </Button>
+                </div>
+
+                {/* Stats at a glance */}
+                <div className="gradient-border rounded-2xl px-4 py-4">
+                  <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-soft">
+                    At a Glance
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between text-[12px]">
+                      <span className="text-muted">Active wallets</span>
+                      <span className="font-semibold text-foreground">{activeAssets.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[12px]">
+                      <span className="text-muted">Archived</span>
+                      <span className="font-semibold text-foreground">{archivedAssets.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[12px]">
+                      <span className="text-muted">Currencies</span>
+                      <span className="font-semibold text-foreground">
+                        {new Set(activeAssets.map((a) => getCurrencyIso(a.currencyUid))).size}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
+        {/* Mobile-only fixed add button */}
         <Button
           type="button"
           size="lg"
-          className="fixed bottom-20 right-4 z-20 shadow-xl shadow-primary/30"
+          className="fixed bottom-20 right-4 z-20 shadow-xl shadow-primary/30 lg:hidden"
           onClick={handleCreateOpen}
         >
           Add wallet

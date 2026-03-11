@@ -149,7 +149,8 @@ export default function StatsPage() {
 
   return (
     <MobileShell title="Stats" activeTab="stats">
-      <div className="mx-auto max-w-xl space-y-4 pb-24">
+      {/* Mobile layout: single column with max-width */}
+      <div className="mx-auto max-w-xl space-y-4 pb-24 lg:hidden">
         <PeriodSelector value={period} onChange={setPeriod} />
 
         <AnimatePresence mode="wait">
@@ -178,9 +179,7 @@ export default function StatsPage() {
                 net={net}
                 transactionCount={totalTransactionCount}
               />
-
-            <CashflowChart data={cashflowData} period={period} />
-
+              <CashflowChart data={cashflowData} period={period} />
               <CategoryBreakdown
                 expenseBreakdown={expenseCategoryBreakdown}
                 incomeBreakdown={incomeCategoryBreakdown}
@@ -189,40 +188,96 @@ export default function StatsPage() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        <CategoryTransactionsSheet
-          isOpen={isSheetOpen}
-          onOpenChange={setIsSheetOpen}
-          categoryItem={selectedCategory}
-          doType={selectedDoType}
-          transactions={displayTransactions}
-          assets={assets}
-          categories={categories}
-          getCurrencyIso={getCurrencyIso}
-          onEdit={handleEditOpen}
-          onDelete={handleDeleteOpen}
-        />
-
-        <TransactionFormSheet
-          isOpen={isFormOpen}
-          onOpenChange={setIsFormOpen}
-          assets={assets}
-          categories={categories}
-          transaction={editingTransaction}
-          onSubmitIncomeExpense={handleSubmitIncomeExpense}
-          onSubmitTransfer={handleSubmitTransfer}
-          onUpdateIncomeExpense={handleUpdateIncomeExpense}
-          onAddCategory={addCategory}
-        />
-
-        <DeleteTransactionDialog
-          transaction={deletingTransaction}
-          categories={categories}
-          isOpen={isDeleteOpen}
-          onOpenChange={setIsDeleteOpen}
-          onConfirm={handleDeleteConfirm}
-        />
       </div>
+
+      {/* Desktop layout: 2-column grid */}
+      <div className="hidden lg:flex lg:flex-col lg:gap-5">
+        {/* Period selector row */}
+        <div className="flex items-center justify-between">
+          <PeriodSelector value={period} onChange={setPeriod} />
+        </div>
+
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div
+              key="loading-desktop"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15 }}
+            >
+              <StatsLoadingSkeleton />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="content-desktop"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="flex flex-col gap-5"
+            >
+              {/* Summary cards: full width 4-col grid */}
+              <StatsSummaryCards
+                totalIncome={totalIncome}
+                totalExpense={totalExpense}
+                net={net}
+                transactionCount={totalTransactionCount}
+              />
+
+              {/* Chart + Category breakdown side by side */}
+              <div className="grid grid-cols-5 gap-5 items-start">
+                {/* Cashflow chart: wider */}
+                <div className="col-span-3">
+                  <CashflowChart data={cashflowData} period={period} />
+                </div>
+
+                {/* Category breakdown: narrower */}
+                <div className="col-span-2">
+                  <CategoryBreakdown
+                    expenseBreakdown={expenseCategoryBreakdown}
+                    incomeBreakdown={incomeCategoryBreakdown}
+                    onCategoryClick={handleCategoryClick}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <CategoryTransactionsSheet
+        isOpen={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+        categoryItem={selectedCategory}
+        doType={selectedDoType}
+        transactions={displayTransactions}
+        assets={assets}
+        categories={categories}
+        getCurrencyIso={getCurrencyIso}
+        onEdit={handleEditOpen}
+        onDelete={handleDeleteOpen}
+      />
+
+      <TransactionFormSheet
+        isOpen={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        assets={assets}
+        categories={categories}
+        transaction={editingTransaction}
+        onSubmitIncomeExpense={handleSubmitIncomeExpense}
+        onSubmitTransfer={handleSubmitTransfer}
+        onUpdateIncomeExpense={handleUpdateIncomeExpense}
+        onAddCategory={addCategory}
+      />
+
+      <DeleteTransactionDialog
+        transaction={deletingTransaction}
+        categories={categories}
+        isOpen={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        onConfirm={handleDeleteConfirm}
+      />
     </MobileShell>
   );
 }

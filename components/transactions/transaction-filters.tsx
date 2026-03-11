@@ -70,7 +70,7 @@ export function TransactionFilters({
   const activeAssets = assets.filter((a) => !a.isArchived);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex min-w-0 flex-col gap-3 overflow-hidden">
       <Input
         type="text"
         value={filter.search ?? ""}
@@ -116,18 +116,18 @@ export function TransactionFilters({
           ))}
         </select>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-1.5">
         <Input
           type="date"
           value={filter.fromDate ?? ""}
           onChange={(event) => handleFromDateChange(event.target.value)}
-          className="h-8 flex-1 text-[11px]"
+          className="h-8 w-full min-w-0 text-[11px]"
         />
         <Input
           type="date"
           value={filter.toDate ?? ""}
           onChange={(event) => handleToDateChange(event.target.value)}
-          className="h-8 flex-1 text-[11px]"
+          className="h-8 w-full min-w-0 text-[11px]"
         />
       </div>
     </div>
