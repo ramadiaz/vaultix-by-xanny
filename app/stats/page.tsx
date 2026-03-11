@@ -46,6 +46,7 @@ export default function StatsPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
+              className="space-y-4"
             >
               <StatsSummaryCards
                 totalIncome={totalIncome}
