@@ -29,7 +29,7 @@ export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
             onClick={() => onChange(opt.value)}
             className={`min-h-[32px] min-w-[52px] flex-1 shrink-0 whitespace-nowrap rounded-xl px-2 py-1 text-xs font-semibold transition-all duration-200 active:scale-[0.99] ${
               value === opt.value
-                ? "bg-glass-bg-strong text-foreground shadow-sm"
+                ? "bg-gradient-primary text-white shadow-md shadow-primary/20"
                 : "text-muted-soft hover:bg-glass-bg-strong/50 hover:text-foreground"
             }`}
           >

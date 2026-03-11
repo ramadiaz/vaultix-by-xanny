@@ -32,25 +32,30 @@ export function TransactionSummary({ transactions }: TransactionSummaryProps) {
 
   return (
     <div className="grid grid-cols-1 gap-2 xs:grid-cols-3">
-      <div className="rounded-2xl border border-glass-border bg-glass-bg px-3 py-2.5 ring-1 ring-success/10">
+      <div className="relative overflow-hidden rounded-2xl px-3 py-2.5 before:absolute before:inset-0 before:opacity-[0.2] before:[background:var(--gradient-success)] before:content-['']">
+        <div className="relative z-10 rounded-2xl border border-white/10 bg-glass-bg/90 px-3 py-2.5 backdrop-blur-sm">
         <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-success/70">
           Income
         </span>
         <p className="mt-0.5 text-sm font-semibold text-success">
           {formatCurrencyByIso(income, "IDR")}
         </p>
+        </div>
       </div>
 
-      <div className="rounded-2xl border border-glass-border bg-glass-bg px-3 py-2.5 ring-1 ring-danger/10">
+      <div className="relative overflow-hidden rounded-2xl px-3 py-2.5 before:absolute before:inset-0 before:opacity-[0.2] before:[background:var(--gradient-danger)] before:content-['']">
+        <div className="relative z-10 rounded-2xl border border-white/10 bg-glass-bg/90 px-3 py-2.5 backdrop-blur-sm">
         <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-danger/70">
           Expense
         </span>
         <p className="mt-0.5 text-sm font-semibold text-danger">
           {formatCurrencyByIso(expense, "IDR")}
         </p>
+        </div>
       </div>
 
-      <div className="rounded-2xl border border-glass-border bg-glass-bg px-3 py-2.5">
+      <div className="relative overflow-hidden rounded-2xl px-3 py-2.5 before:absolute before:inset-0 before:opacity-[0.15] before:[background:var(--gradient-primary)] before:content-['']">
+        <div className="relative z-10 rounded-2xl border border-white/10 bg-glass-bg/90 px-3 py-2.5 backdrop-blur-sm">
         <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-soft">
           Net
         </span>
@@ -62,6 +67,7 @@ export function TransactionSummary({ transactions }: TransactionSummaryProps) {
           {net >= 0 ? "+" : "-"}
           {formatCurrencyByIso(Math.abs(net), "IDR")}
         </p>
+        </div>
       </div>
     </div>
   );

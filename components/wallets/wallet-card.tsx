@@ -40,6 +40,7 @@ export function WalletCard({
       onClick={() => onTap(asset)}
       className={cn(
         "group relative overflow-hidden rounded-2xl border border-glass-border bg-glass-bg transition-transform duration-150 ease-out active:scale-[0.99]",
+        "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:rounded-l-2xl before:[background:linear-gradient(180deg,var(--primary)_0%,var(--success)_100%)] before:opacity-60 before:content-['']",
         asset.isArchived && "opacity-60",
       )}
     >

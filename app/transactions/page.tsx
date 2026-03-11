@@ -176,7 +176,7 @@ export default function TransactionsPage() {
         <Button
           type="button"
           size="lg"
-          className="fixed bottom-20 right-4 z-20 shadow-lg shadow-black/40"
+          className="fixed bottom-20 right-4 z-20 shadow-xl shadow-primary/30"
           onClick={handleCreateOpen}
         >
           Add transaction

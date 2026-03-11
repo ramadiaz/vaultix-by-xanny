@@ -62,7 +62,7 @@ export function TransactionCard({
   return (
     <div
       onClick={() => setShowActions((p) => !p)}
-      className="overflow-hidden rounded-2xl border border-glass-border bg-glass-bg transition-transform duration-150 ease-out active:scale-[0.99]"
+      className="relative overflow-hidden rounded-2xl border border-glass-border bg-glass-bg transition-transform duration-150 ease-out active:scale-[0.99] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:rounded-l-2xl before:[background:linear-gradient(180deg,var(--primary)_0%,#8B5CF6_100%)] before:opacity-50 before:content-['']"
     >
       <div className="flex items-center gap-3 px-4 py-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-base">

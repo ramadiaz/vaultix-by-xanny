@@ -26,7 +26,7 @@ export function MobileShell({ title, activeTab, children }: MobileShellProps) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <header className="flex items-center justify-between border-b border-glass-border bg-glass-bg/80 px-4 py-3 backdrop-blur-[var(--glass-blur)]">
+      <header className="relative flex items-center justify-between border-b border-glass-border bg-glass-bg/80 px-4 py-3 backdrop-blur-[var(--glass-blur)] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:[background:linear-gradient(90deg,transparent_0%,var(--primary)_50%,transparent_100%)] after:opacity-40 after:content-['']">
         <div className="flex flex-col gap-0.5">
           <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-soft">
             Vaultix
@@ -56,7 +56,7 @@ export function MobileShell({ title, activeTab, children }: MobileShellProps) {
         {children}
       </main>
 
-      <nav className="sticky bottom-0 z-10 border-t border-glass-border bg-glass-bg-strong backdrop-blur-[var(--glass-blur-strong)]">
+      <nav className="relative sticky bottom-0 z-10 border-t border-glass-border bg-glass-bg-strong backdrop-blur-[var(--glass-blur-strong)] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:[background:linear-gradient(90deg,transparent_0%,var(--primary)_30%,var(--success)_70%,transparent_100%)] before:opacity-30 before:content-['']">
         <div className="mx-auto flex max-w-xl items-center justify-between px-6 py-2.5 text-xs text-muted">
           <Button
             asChild

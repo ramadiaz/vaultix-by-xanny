@@ -61,7 +61,8 @@ export function CashflowChart({ data, period }: CashflowChartProps) {
   const hasData = data.some((d) => d.income > 0 || d.expense > 0);
 
   return (
-    <div className="rounded-2xl border border-glass-border bg-glass-bg px-4 py-4">
+    <div className="relative overflow-hidden rounded-2xl border border-glass-border px-4 py-4 before:absolute before:inset-0 before:opacity-[0.08] before:[background:var(--gradient-primary)] before:content-['']">
+      <div className="relative z-10 rounded-2xl bg-glass-bg/80 px-4 py-4 backdrop-blur-sm">
       <h3 className="mb-3 text-[12px] font-semibold uppercase tracking-[0.12em] text-muted-soft">
         Cashflow
       </h3>
@@ -73,6 +74,18 @@ export function CashflowChart({ data, period }: CashflowChartProps) {
       ) : (
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={data} barGap={2} barCategoryGap="30%">
+            <defs>
+              <linearGradient id="incomeGradient" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stopColor="#047857" />
+                <stop offset="50%" stopColor="#10B981" />
+                <stop offset="100%" stopColor="#34D399" />
+              </linearGradient>
+              <linearGradient id="expenseGradient" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stopColor="#BE123C" />
+                <stop offset="50%" stopColor="#F43F5E" />
+                <stop offset="100%" stopColor="#FB7185" />
+              </linearGradient>
+            </defs>
             <CartesianGrid
               vertical={false}
               stroke="rgba(255,255,255,0.04)"
@@ -93,8 +106,8 @@ export function CashflowChart({ data, period }: CashflowChartProps) {
               width={36}
             />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
-            <Bar dataKey="income" name="income" fill="var(--success)" radius={[3, 3, 0, 0]} />
-            <Bar dataKey="expense" name="expense" fill="var(--danger)" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="income" name="income" fill="url(#incomeGradient)" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="expense" name="expense" fill="url(#expenseGradient)" radius={[3, 3, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       )}
@@ -108,6 +121,7 @@ export function CashflowChart({ data, period }: CashflowChartProps) {
           <span className="inline-block size-2.5 rounded-full bg-danger" />
           <span className="text-[12px] text-muted-soft">Expense</span>
         </div>
+      </div>
       </div>
     </div>
   );

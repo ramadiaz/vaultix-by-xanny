@@ -30,6 +30,12 @@
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-blur: 12px;
   --glass-blur-strong: 20px;
+
+  --gradient-primary: linear-gradient(135deg, #06B6D4 0%, #0891B2 50%, #0E7490 100%);
+  --gradient-success: linear-gradient(135deg, #10B981 0%, #059669 50%, #047857 100%);
+  --gradient-danger: linear-gradient(135deg, #F43F5E 0%, #E11D48 50%, #BE123C 100%);
+  --gradient-accent: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #A855F7 100%);
+  --gradient-warm: linear-gradient(135deg, #FBBF24 0%, #F59E0B 50%, #D97706 100%);
 }
 
 [data-theme="light"] {
@@ -60,6 +66,12 @@
   --glass-bg: rgba(255, 255, 255, 0.6);
   --glass-bg-strong: rgba(255, 255, 255, 0.85);
   --glass-border: rgba(8, 145, 178, 0.12);
+
+  --gradient-primary: linear-gradient(135deg, #22D3EE 0%, #06B6D4 50%, #0891B2 100%);
+  --gradient-success: linear-gradient(135deg, #34D399 0%, #10B981 50%, #059669 100%);
+  --gradient-danger: linear-gradient(135deg, #FB7185 0%, #F43F5E 50%, #E11D48 100%);
+  --gradient-accent: linear-gradient(135deg, #818CF8 0%, #6366F1 50%, #4F46E5 100%);
+  --gradient-warm: linear-gradient(135deg, #FCD34D 0%, #FBBF24 50%, #F59E0B 100%);
 }
 
 [data-theme="dark"] {
@@ -152,10 +164,12 @@
 body {
   min-height: 100dvh;
   background:
-    radial-gradient(circle at 0% 0%, rgba(6, 182, 212, 0.22), transparent 45%),
-    radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.15), transparent 45%),
-    radial-gradient(circle at 50% 80%, rgba(6, 182, 212, 0.06), transparent 60%),
-    linear-gradient(165deg, #090D14 0%, #0f172a 40%, #090D14 100%);
+    radial-gradient(circle at 0% 0%, rgba(6, 182, 212, 0.28), transparent 40%),
+    radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.18), transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.2), transparent 45%),
+    radial-gradient(circle at 0% 100%, rgba(251, 191, 36, 0.08), transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04), transparent 70%),
+    linear-gradient(160deg, #090D14 0%, #0f172a 25%, #0c1222 50%, #0f172a 75%, #090D14 100%);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
@@ -163,8 +177,48 @@ body {
 
 [data-theme="light"] body {
   background:
-    radial-gradient(circle at 0% 0%, rgba(8, 145, 178, 0.14), transparent 45%),
-    radial-gradient(circle at 100% 100%, rgba(5, 150, 105, 0.1), transparent 45%),
-    radial-gradient(circle at 50% 80%, rgba(6, 182, 212, 0.05), transparent 60%),
-    linear-gradient(165deg, #F0F9FF 0%, #E0F2FE 40%, #F0F9FF 100%);
+    radial-gradient(circle at 0% 0%, rgba(8, 145, 178, 0.2), transparent 40%),
+    radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.12), transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(5, 150, 105, 0.15), transparent 45%),
+    radial-gradient(circle at 0% 100%, rgba(251, 191, 36, 0.1), transparent 45%),
+    linear-gradient(160deg, #F0F9FF 0%, #E0F2FE 25%, #F8FAFC 50%, #E0F2FE 75%, #F0F9FF 100%);
+}
+
+.bg-gradient-primary {
+  background: var(--gradient-primary);
+}
+
+.bg-gradient-success {
+  background: var(--gradient-success);
+}
+
+.bg-gradient-danger {
+  background: var(--gradient-danger);
+}
+
+.bg-gradient-accent {
+  background: var(--gradient-accent);
+}
+
+.bg-gradient-warm {
+  background: var(--gradient-warm);
+}
+
+.gradient-border {
+  position: relative;
+  background: var(--glass-bg);
+}
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.4), rgba(16, 185, 129, 0.3), rgba(99, 102, 241, 0.2));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }

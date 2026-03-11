@@ -140,7 +140,7 @@ export function CategoryBreakdown({
             onClick={() => setActiveTab("expense")}
             className={`min-h-[36px] rounded-lg px-3 py-2 text-[12px] font-semibold transition-all duration-200 active:scale-[0.99] ${
               activeTab === "expense"
-                ? "bg-danger/10 text-danger"
+                ? "bg-danger/15 text-danger ring-1 ring-danger/30"
                 : "text-muted active:text-foreground"
             }`}
           >
@@ -150,7 +150,7 @@ export function CategoryBreakdown({
             onClick={() => setActiveTab("income")}
             className={`min-h-[36px] rounded-lg px-3 py-2 text-[12px] font-semibold transition-all duration-200 active:scale-[0.99] ${
               activeTab === "income"
-                ? "bg-success/10 text-success"
+                ? "bg-success/15 text-success ring-1 ring-success/30"
                 : "text-muted active:text-foreground"
             }`}
           >
