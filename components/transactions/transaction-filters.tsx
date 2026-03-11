@@ -115,14 +115,14 @@ export function TransactionFilters({
             </option>
           ))}
         </select>
-
+      </div>
+      <div className="flex items-center gap-2">
         <Input
           type="date"
           value={filter.fromDate ?? ""}
           onChange={(event) => handleFromDateChange(event.target.value)}
           className="h-8 flex-1 text-[11px]"
         />
-
         <Input
           type="date"
           value={filter.toDate ?? ""}

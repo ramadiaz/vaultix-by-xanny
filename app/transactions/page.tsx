@@ -168,6 +168,7 @@ export default function TransactionsPage() {
                 onEdit={handleEditOpen}
                 onDelete={handleDeleteOpen}
               />
+              <div className="h-40" />
             </motion.div>
           )}
         </AnimatePresence>
