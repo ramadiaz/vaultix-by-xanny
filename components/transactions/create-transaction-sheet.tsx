@@ -3,6 +3,10 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Transaction, TransactionKind } from "@/features/transactions/types/transaction";
 import { Wallet } from "@/features/wallets/types/wallet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 type CreateTransactionSheetProps = {
   wallets: Wallet[];
@@ -106,112 +110,101 @@ export function CreateTransactionSheet({
   }
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={handleOpen}
-        className="fixed bottom-20 left-4 z-20 inline-flex h-11 items-center justify-center rounded-full bg-accent px-5 text-sm font-semibold text-foreground shadow-lg shadow-black/40 active:scale-[0.97]"
-      >
-        Add transaction
-      </button>
+    <Sheet open={isOpen} onOpenChange={(open) => (open ? handleOpen() : handleClose())}>
+      <SheetTrigger asChild>
+        <Button
+          type="button"
+          variant="secondary"
+          size="lg"
+          className="fixed bottom-20 left-4 z-20 shadow-lg shadow-black/40"
+        >
+          Add transaction
+        </Button>
+      </SheetTrigger>
 
-      {isOpen ? (
-        <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-t-3xl bg-background px-5 pb-5 pt-3 shadow-lg">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-soft">
-                  Activity
-                </span>
-                <h2 className="text-base font-semibold text-foreground">
-                  Add transaction
-                </h2>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleClose}
-                className="rounded-full px-2 py-1 text-xs text-muted hover:bg-accent-soft"
-              >
-                Close
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3 text-xs">
-              <label className="flex flex-col gap-1">
-                <span className="font-medium text-muted-soft">Wallet</span>
-                <select
-                  value={formState.walletId}
-                  onChange={(event) => handleFieldChange("walletId", event.target.value)}
-                  className="h-9 rounded-2xl border border-border-subtle bg-background-soft px-3 text-sm text-foreground outline-none focus:border-primary"
-                >
-                  <option value="">Select wallet</option>
-                  {wallets.map((wallet) => (
-                    <option key={wallet.id} value={wallet.id}>
-                      {wallet.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <div className="grid grid-cols-2 gap-3">
-                <label className="flex flex-col gap-1">
-                  <span className="font-medium text-muted-soft">Type</span>
-                  <select
-                    value={formState.kind}
-                    onChange={(event) =>
-                      handleFieldChange("kind", event.target.value as TransactionKind)
-                    }
-                    className="h-9 rounded-2xl border border-border-subtle bg-background-soft px-3 text-sm text-foreground outline-none focus:border-primary"
-                  >
-                    {kindOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="flex flex-col gap-1">
-                  <span className="font-medium text-muted-soft">Amount</span>
-                  <input
-                    type="tel"
-                    inputMode="numeric"
-                    value={formState.amount}
-                    onChange={(event) =>
-                      handleFieldChange("amount", event.target.value)
-                    }
-                    placeholder="0"
-                    className="h-9 rounded-2xl border border-border-subtle bg-background-soft px-3 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                  />
-                </label>
-              </div>
-
-              <label className="flex flex-col gap-1">
-                <span className="font-medium text-muted-soft">Description</span>
-                <input
-                  type="text"
-                  value={formState.description}
-                  onChange={(event) =>
-                    handleFieldChange("description", event.target.value)
-                  }
-                  placeholder="e.g. Coffee, salary, groceries"
-                  className="h-9 rounded-2xl border border-border-subtle bg-background-soft px-3 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                />
-              </label>
-
-              <button
-                type="submit"
-                disabled={!isValid || isSubmitting}
-                className="mt-1 flex h-10 items-center justify-center rounded-full bg-primary text-sm font-semibold text-background disabled:opacity-60"
-              >
-                Save transaction
-              </button>
-            </form>
+      <SheetContent>
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-soft">
+              Activity
+            </span>
+            <h2 className="text-base font-semibold text-foreground">Add transaction</h2>
           </div>
         </div>
-      ) : null}
-    </>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 text-xs">
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="transaction-wallet">Wallet</Label>
+            <select
+              id="transaction-wallet"
+              value={formState.walletId}
+              onChange={(event) => handleFieldChange("walletId", event.target.value)}
+              className="h-9 rounded-2xl border border-border-subtle bg-background-soft px-3 text-sm text-foreground outline-none focus:border-primary"
+            >
+              <option value="">Select wallet</option>
+              {wallets.map((wallet) => (
+                <option key={wallet.id} value={wallet.id}>
+                  {wallet.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="transaction-kind">Type</Label>
+              <select
+                id="transaction-kind"
+                value={formState.kind}
+                onChange={(event) =>
+                  handleFieldChange("kind", event.target.value as TransactionKind)
+                }
+                className="h-9 rounded-2xl border border-border-subtle bg-background-soft px-3 text-sm text-foreground outline-none focus:border-primary"
+              >
+                {kindOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="transaction-amount">Amount</Label>
+              <Input
+                id="transaction-amount"
+                type="tel"
+                inputMode="numeric"
+                value={formState.amount}
+                onChange={(event) => handleFieldChange("amount", event.target.value)}
+                placeholder="0"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="transaction-description">Description</Label>
+            <Input
+              id="transaction-description"
+              type="text"
+              value={formState.description}
+              onChange={(event) =>
+                handleFieldChange("description", event.target.value)
+              }
+              placeholder="e.g. Coffee, salary, groceries"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            disabled={!isValid || isSubmitting}
+            className="mt-1 h-10"
+          >
+            Save transaction
+          </Button>
+        </form>
+      </SheetContent>
+    </Sheet>
   );
 }
 

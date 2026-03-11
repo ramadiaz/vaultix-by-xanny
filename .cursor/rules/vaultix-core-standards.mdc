@@ -24,9 +24,10 @@ alwaysApply: true
 ## UX, UI, and Platform
 
 - **Mobile first**: design and layout must prioritize phone screens; desktop is secondary.
-- **Design language**: take inspiration from the **Stockbit** mobile app style (clean, modern, card‑based).
+- **Visual style**: use a **modern, elegant, glossy look** with soft gradients, subtle glassmorphism, and smooth rounded shapes.
 - **Color modes**: support **light and dark mode**, with **dark mode as the default**.
 - **UX writing**: all user‑facing text **must be in English**, concise and consistent.
+- **UI primitives**: prefer **HeroUI components** from `@heroui/react` (and any thin wrappers around them) for buttons, inputs, overlays, navigation, and cards instead of raw HTML or ad‑hoc styles.
 
 ## Architecture & Data
 
@@ -47,6 +48,7 @@ alwaysApply: true
   - **Utils** for pure helpers.
   - **Components** and **HOCs** for UI composition and cross‑cutting UI behavior.
   - **Config** modules for constants, feature flags, and environment‑specific settings.
+  - **HeroUI primitives** as the base layer for interactive elements; other UI libraries may be added when they accelerate development and fit the design.
 
 ## Data Access & API Pattern
 

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { AuthProvider } from "@/features/auth/hooks/use-auth";
+import { HeroUIRootProvider } from "@/components/theme/heroui-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +31,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <HeroUIRootProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </HeroUIRootProvider>
         </ThemeProvider>
       </body>
     </html>

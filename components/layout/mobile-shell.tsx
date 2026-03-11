@@ -2,6 +2,7 @@
 
 import { ReactNode } from "react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 type MobileTab = "wallets" | "transactions" | "stats" | "settings";
 
@@ -29,28 +30,36 @@ export function MobileShell({ title, activeTab, children }: MobileShellProps) {
 
       <nav className="sticky bottom-0 z-10 border-t border-border-subtle bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-xl items-center justify-between px-6 py-2.5 text-xs text-muted">
-          <Link
-            href="/"
-            className={`flex flex-1 flex-col items-center gap-1 rounded-full px-3 py-1 text-[11px] font-medium ${
-              activeTab === "wallets" ? "text-primary" : ""
-            }`}
+          <Button
+            asChild
+            variant={activeTab === "wallets" ? "default" : "ghost"}
+            size="sm"
+            className="flex-1 rounded-full text-[11px] font-medium"
           >
-            <span>Wallets</span>
-          </Link>
-          <Link
-            href="/transactions"
-            className={`flex flex-1 flex-col items-center gap-1 rounded-full px-3 py-1 text-[11px] font-medium ${
-              activeTab === "transactions" ? "text-primary" : ""
-            }`}
+            <Link href="/">Wallets</Link>
+          </Button>
+          <Button
+            asChild
+            variant={activeTab === "transactions" ? "default" : "ghost"}
+            size="sm"
+            className="flex-1 rounded-full text-[11px] font-medium"
           >
-            <span>Transactions</span>
-          </Link>
-          <button className="flex flex-1 flex-col items-center gap-1 rounded-full px-3 py-1 text-[11px] font-medium">
-            <span>Stats</span>
-          </button>
-          <button className="flex flex-1 flex-col items-center gap-1 rounded-full px-3 py-1 text-[11px] font-medium">
-            <span>Settings</span>
-          </button>
+            <Link href="/transactions">Transactions</Link>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-1 rounded-full text-[11px] font-medium"
+          >
+            Stats
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-1 rounded-full text-[11px] font-medium"
+          >
+            Settings
+          </Button>
         </div>
       </nav>
     </div>

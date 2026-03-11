@@ -2,6 +2,8 @@
 
 import { ReactNode } from "react";
 import { useAuth } from "@/features/auth/hooks/use-auth";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 type AuthGateProps = {
   children: ReactNode;
@@ -21,7 +23,7 @@ export function AuthGate({ children }: AuthGateProps) {
   if (!user) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center bg-background-soft px-6">
-        <div className="w-full max-w-xs rounded-3xl bg-background px-5 py-6 shadow-sm shadow-black/40">
+        <Card className="w-full max-w-xs">
           <div className="mb-6 flex flex-col gap-1">
             <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-soft">
               Vaultix
@@ -35,19 +37,15 @@ export function AuthGate({ children }: AuthGateProps) {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={signInWithGoogle}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-background transition active:scale-[0.98]"
-          >
+          <Button type="button" onClick={signInWithGoogle} className="w-full">
             <span>Continue with Google</span>
-          </button>
+          </Button>
 
           <p className="mt-4 text-[10px] leading-relaxed text-muted">
             Vaultix only uses your Google identity and Drive access for backup, sync,
             and restore. You stay in full control of your data.
           </p>
-        </div>
+        </Card>
       </div>
     );
   }
