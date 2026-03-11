@@ -2,7 +2,11 @@
 
 import { ReactNode } from "react";
 import Link from "next/link";
+import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import { useBackupSync } from "@/features/backup/hooks/use-backup-sync";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 type MobileTab = "wallets" | "transactions" | "stats" | "settings";
 
@@ -13,6 +17,13 @@ type MobileShellProps = {
 };
 
 export function MobileShell({ title, activeTab, children }: MobileShellProps) {
+  const { user } = useAuth();
+  const { sync, state: syncState } = useBackupSync();
+  const isSyncing =
+    syncState.status === "syncing" ||
+    syncState.status === "listing" ||
+    syncState.status === "restoring";
+
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <header className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
@@ -22,6 +33,23 @@ export function MobileShell({ title, activeTab, children }: MobileShellProps) {
           </span>
           <h1 className="text-lg font-semibold text-foreground">{title}</h1>
         </div>
+        {user && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-9 w-9 shrink-0 p-0"
+            onClick={() => sync()}
+            disabled={isSyncing}
+            aria-label="Sync"
+          >
+            {isSyncing ? (
+              <LoadingSpinner size="sm" />
+            ) : (
+              <RefreshCw className="h-5 w-5" />
+            )}
+          </Button>
+        )}
       </header>
 
       <main className="flex-1 overflow-y-auto bg-background-soft px-4 py-4">

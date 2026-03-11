@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import {
-  syncToBackupServer,
+  performSync,
   fetchBackupsFromServer,
   downloadBackupFromServer,
   BackupItem,
@@ -12,6 +12,8 @@ import {
 import { getStoredAssets } from "@/features/wallets/services/wallet-storage.service";
 import { getStoredTransactions } from "@/features/transactions/services/transaction-storage.service";
 import { getStoredCategories } from "@/features/transactions/services/category-storage.service";
+
+const DATA_RELOAD_EVENT = "vaultix:data-reload";
 
 type BackupSyncState =
   | { status: "idle" }
@@ -29,16 +31,16 @@ export function useBackupSync() {
   const sync = useCallback(async () => {
     setState({ status: "syncing" });
     try {
-      await syncToBackupServer();
+      await performSync();
       setState({
         status: "synced",
-        message: "Backup synced successfully.",
+        message: "Synced successfully.",
       });
     } catch (err) {
       setState({
         status: "error",
         message:
-          err instanceof Error ? err.message : "Failed to sync backup",
+          err instanceof Error ? err.message : "Failed to sync",
       });
     }
   }, []);
@@ -76,9 +78,12 @@ export function useBackupSync() {
         existingTransactions,
         existingCategories
       );
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent(DATA_RELOAD_EVENT));
+      }
       setState({
         status: "restored",
-        message: "Data restored successfully. Reload the page to see changes.",
+        message: "Data restored successfully.",
       });
     } catch (err) {
       setState({

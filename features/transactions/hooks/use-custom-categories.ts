@@ -18,6 +18,13 @@ type UseCategoriesValue = {
 export function useCategories(): UseCategoriesValue {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [reloadTrigger, setReloadTrigger] = useState(0);
+
+  useEffect(() => {
+    const handler = () => setReloadTrigger((t) => t + 1);
+    window.addEventListener("vaultix:data-reload", handler);
+    return () => window.removeEventListener("vaultix:data-reload", handler);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -34,7 +41,7 @@ export function useCategories(): UseCategoriesValue {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [reloadTrigger]);
 
   async function persist(next: Category[]) {
     await storeCategories(next);

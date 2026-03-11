@@ -345,5 +345,7 @@ export async function persistDatabase(db?: Database): Promise<void> {
   } catch {
     return;
   }
+
+  window.dispatchEvent(new CustomEvent("vaultix:data-changed"));
 }
 

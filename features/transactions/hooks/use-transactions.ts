@@ -104,11 +104,18 @@ export function useTransactions(
     transactions: [],
     isLoading: true,
   });
+  const [reloadTrigger, setReloadTrigger] = useState(0);
 
   const [filter, setFilter] = useState<TransactionFilter>(() => {
     const { fromDate, toDate } = getCurrentMonthDateRange();
     return { fromDate, toDate };
   });
+
+  useEffect(() => {
+    const handler = () => setReloadTrigger((t) => t + 1);
+    window.addEventListener("vaultix:data-reload", handler);
+    return () => window.removeEventListener("vaultix:data-reload", handler);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -127,7 +134,7 @@ export function useTransactions(
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [reloadTrigger]);
 
   const displayTransactions: DisplayTransaction[] = useMemo(() => {
     const txMap = new Map(state.transactions.map((t) => [t.uid, t]));

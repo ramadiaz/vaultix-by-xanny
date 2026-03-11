@@ -42,6 +42,13 @@ export function useWallets(): UseWalletsValue {
     currencies: [],
     isLoading: true,
   });
+  const [reloadTrigger, setReloadTrigger] = useState(0);
+
+  useEffect(() => {
+    const handler = () => setReloadTrigger((t) => t + 1);
+    window.addEventListener("vaultix:data-reload", handler);
+    return () => window.removeEventListener("vaultix:data-reload", handler);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -68,7 +75,7 @@ export function useWallets(): UseWalletsValue {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [reloadTrigger]);
 
   const activeAssets = useMemo(
     () => state.assets.filter((a) => !a.isArchived).sort((a, b) => a.orderSeq - b.orderSeq),
