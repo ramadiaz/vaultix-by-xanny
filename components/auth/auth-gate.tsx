@@ -1,9 +1,10 @@
- "use client";
+"use client";
 
 import { ReactNode } from "react";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AppLoadingScreen } from "@/components/loading/app-loading-screen";
 
 type AuthGateProps = {
   children: ReactNode;
@@ -13,11 +14,7 @@ export function AuthGate({ children }: AuthGateProps) {
   const { user, isReady, signInWithGoogle } = useAuth();
 
   if (!isReady) {
-    return (
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-background-soft text-xs text-muted">
-        Loading Vaultix
-      </div>
-    );
+    return <AppLoadingScreen message="Loading Vaultix" />;
   }
 
   if (!user) {

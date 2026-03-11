@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Transaction, DoType } from "@/features/transactions/types/transaction";
 import { DisplayTransaction } from "@/features/transactions/hooks/use-transactions";
 import { AuthGate } from "@/components/auth/auth-gate";
@@ -14,6 +15,7 @@ import { useTransactions } from "@/features/transactions/hooks/use-transactions"
 import { useCategories } from "@/features/transactions/hooks/use-custom-categories";
 import { useWallets } from "@/features/wallets/hooks/use-wallets";
 import { Button } from "@/components/ui/button";
+import { TransactionsLoadingSkeleton } from "@/components/loading/transactions-loading-skeleton";
 
 export default function TransactionsPage() {
   const { assets, isLoading: isAssetsLoading, updateAssetBalance, getCurrencyIso } =
@@ -129,30 +131,46 @@ export default function TransactionsPage() {
   return (
     <AuthGate>
       <MobileShell title="Transactions" activeTab="transactions">
-        {isLoading ? (
-          <div className="flex h-40 items-center justify-center text-xs text-muted">
-            Loading your activity
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4">
-            <TransactionSummary transactions={displayTransactions} />
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="flex flex-col gap-4"
+            >
+              <TransactionsLoadingSkeleton />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="content"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="flex flex-col gap-4"
+            >
+              <TransactionSummary transactions={displayTransactions} />
 
-            <TransactionFilters
-              filter={filter}
-              assets={assets}
-              onFilterChange={setFilter}
-            />
+              <TransactionFilters
+                filter={filter}
+                assets={assets}
+                onFilterChange={setFilter}
+              />
 
-            <TransactionList
-              transactions={displayTransactions}
-              assets={assets}
-              categories={categories}
-              getCurrencyIso={getCurrencyIso}
-              onEdit={handleEditOpen}
-              onDelete={handleDeleteOpen}
-            />
-          </div>
-        )}
+              <TransactionList
+                transactions={displayTransactions}
+                assets={assets}
+                categories={categories}
+                getCurrencyIso={getCurrencyIso}
+                onEdit={handleEditOpen}
+                onDelete={handleDeleteOpen}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <Button
           type="button"

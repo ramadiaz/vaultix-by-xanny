@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Asset } from "@/features/wallets/types/wallet";
 import { Transaction } from "@/features/transactions/types/transaction";
 import { AuthGate } from "@/components/auth/auth-gate";
@@ -18,6 +19,7 @@ import {
   DIFFERENCE_EXPENSE_CATEGORY_UID,
 } from "@/features/transactions/config/transaction-config";
 import { Button } from "@/components/ui/button";
+import { WalletsLoadingSkeleton } from "@/components/loading/wallets-loading-skeleton";
 
 export default function HomePage() {
   const {
@@ -162,12 +164,27 @@ export default function HomePage() {
   return (
     <AuthGate>
       <MobileShell title="Overview" activeTab="wallets">
-        {isLoading ? (
-          <div className="flex h-40 items-center justify-center text-xs text-muted">
-            Loading your wallets
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4">
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="flex flex-col gap-4"
+            >
+              <WalletsLoadingSkeleton />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="content"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="flex flex-col gap-4"
+            >
             <WalletBalanceSummary
               assets={activeAssets}
               getCurrencyIso={getCurrencyIso}
@@ -184,8 +201,9 @@ export default function HomePage() {
               onRestoreAsset={(asset) => restoreAsset(asset.uid)}
               onDeleteAsset={handleDeleteOpen}
             />
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <Button
           type="button"

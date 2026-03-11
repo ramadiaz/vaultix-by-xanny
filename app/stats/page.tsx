@@ -1,11 +1,13 @@
 "use client";
 
+import { motion, AnimatePresence } from "framer-motion";
 import { MobileShell } from "@/components/layout/mobile-shell";
 import { PeriodSelector } from "@/components/stats/period-selector";
 import { StatsSummaryCards } from "@/components/stats/stats-summary-cards";
 import { CashflowChart } from "@/components/stats/cashflow-chart";
 import { CategoryBreakdown } from "@/components/stats/category-breakdown";
 import { useStats } from "@/features/stats/hooks/use-stats";
+import { StatsLoadingSkeleton } from "@/components/loading/stats-loading-skeleton";
 
 export default function StatsPage() {
   const {
@@ -26,36 +28,41 @@ export default function StatsPage() {
       <div className="mx-auto max-w-xl space-y-4 pb-24">
         <PeriodSelector value={period} onChange={setPeriod} />
 
-        {isLoading ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-2">
-              {[...Array(4)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-[72px] animate-pulse rounded-2xl border border-border-subtle bg-accent-soft/40"
-                />
-              ))}
-            </div>
-            <div className="h-[210px] animate-pulse rounded-2xl border border-border-subtle bg-accent-soft/40" />
-            <div className="h-[320px] animate-pulse rounded-2xl border border-border-subtle bg-accent-soft/40" />
-          </div>
-        ) : (
-          <>
-            <StatsSummaryCards
-              totalIncome={totalIncome}
-              totalExpense={totalExpense}
-              net={net}
-              transactionCount={totalTransactionCount}
-            />
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <StatsLoadingSkeleton />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="content"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
+              <StatsSummaryCards
+                totalIncome={totalIncome}
+                totalExpense={totalExpense}
+                net={net}
+                transactionCount={totalTransactionCount}
+              />
 
             <CashflowChart data={cashflowData} period={period} />
 
-            <CategoryBreakdown
-              expenseBreakdown={expenseCategoryBreakdown}
-              incomeBreakdown={incomeCategoryBreakdown}
-            />
-          </>
-        )}
+              <CategoryBreakdown
+                expenseBreakdown={expenseCategoryBreakdown}
+                incomeBreakdown={incomeCategoryBreakdown}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </MobileShell>
   );

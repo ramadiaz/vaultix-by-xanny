@@ -24,6 +24,7 @@ import { getStoredTransactions } from "@/features/transactions/services/transact
 import { getStoredCategories } from "@/features/transactions/services/category-storage.service";
 import { ImportResult } from "@/features/import-export/types/import-export";
 import { cn } from "@/lib/utils/cn";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 type ImportMode = "replace" | "merge";
 
@@ -337,7 +338,14 @@ export default function SettingsPage() {
                 className="h-9"
                 disabled={isExportingMmbak}
               >
-                {isExportingMmbak ? "Exporting..." : "Export .mmbak"}
+                {isExportingMmbak ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <LoadingSpinner size="sm" />
+                    Exporting
+                  </span>
+                ) : (
+                  "Export .mmbak"
+                )}
               </Button>
             </div>
           </Card>
@@ -361,9 +369,14 @@ export default function SettingsPage() {
                   driveState.status === "restoring"
                 }
               >
-                {driveState.status === "syncing"
-                  ? "Syncing..."
-                  : "Sync to Drive"}
+                {driveState.status === "syncing" ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <LoadingSpinner size="sm" />
+                    Syncing
+                  </span>
+                ) : (
+                  "Sync to Drive"
+                )}
               </Button>
               <Button
                 type="button"
@@ -376,16 +389,29 @@ export default function SettingsPage() {
                   driveState.status === "restoring"
                 }
               >
-                {driveState.status === "listing"
-                  ? "Loading..."
-                  : "Restore from Drive"}
+                {driveState.status === "listing" ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <LoadingSpinner size="sm" />
+                    Loading
+                  </span>
+                ) : (
+                  "Restore from Drive"
+                )}
               </Button>
             </div>
             {backups.length > 0 && (
               <div className="flex flex-col gap-1 rounded-xl border border-border-subtle bg-background-soft p-3">
-                <p className="text-[11px] font-medium text-muted-soft">
-                  Available backups
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-medium text-muted-soft">
+                    Available backups
+                  </p>
+                  {driveState.status === "restoring" && (
+                    <span className="flex items-center gap-1.5 text-[10px] font-medium text-primary">
+                      <LoadingSpinner size="sm" />
+                      Restoring
+                    </span>
+                  )}
+                </div>
                 {backups.map((b) => (
                   <div
                     key={b.id}
@@ -541,9 +567,10 @@ export default function SettingsPage() {
           </Card>
 
           {importStatus.state === "loading" && (
-            <Card className="flex items-center justify-center py-6">
-              <p className="text-[12px] font-medium text-muted animate-pulse">
-                Parsing .mmbak file...
+            <Card className="flex flex-col items-center justify-center gap-3 py-8">
+              <LoadingSpinner size="lg" />
+              <p className="text-xs font-medium text-muted">
+                Parsing .mmbak file
               </p>
             </Card>
           )}
