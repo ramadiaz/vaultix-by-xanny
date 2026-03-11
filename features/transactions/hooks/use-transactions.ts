@@ -6,6 +6,7 @@ import {
   getStoredTransactions,
   storeTransactions,
 } from "../services/transaction-storage.service";
+import { addDeletedTransactionUids } from "@/features/sync/services/pending-sync.service";
 
 type AssetBalanceUpdater = (assetUid: string, delta: number) => void;
 
@@ -377,6 +378,8 @@ export function useTransactions(
     if (display.feeTx) {
       uidsToDelete.add(display.feeTx.uid);
     }
+
+    addDeletedTransactionUids(Array.from(uidsToDelete));
 
     setState((prev) => {
       for (const t of prev.transactions) {

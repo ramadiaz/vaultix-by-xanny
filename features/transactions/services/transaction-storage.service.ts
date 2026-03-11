@@ -38,7 +38,10 @@ export async function getStoredTransactions(): Promise<Transaction[]> {
   });
 }
 
-export async function storeTransactions(transactions: Transaction[]): Promise<void> {
+export async function storeTransactions(
+  transactions: Transaction[],
+  options?: { skipPersist?: boolean }
+): Promise<void> {
   const db = await getDatabase();
   db.run("DELETE FROM INOUTCOME");
 
@@ -77,7 +80,7 @@ export async function storeTransactions(transactions: Transaction[]): Promise<vo
   }
 
   stmt.free();
-  await persistDatabase(db);
+  if (!options?.skipPersist) await persistDatabase(db);
 }
 
 export async function getStoredTags(): Promise<Tag[]> {
@@ -106,7 +109,10 @@ export async function getStoredTags(): Promise<Tag[]> {
   });
 }
 
-export async function storeTags(tags: Tag[]): Promise<void> {
+export async function storeTags(
+  tags: Tag[],
+  options?: { skipPersist?: boolean }
+): Promise<void> {
   const db = await getDatabase();
   db.run("DELETE FROM TAG");
 
@@ -126,7 +132,7 @@ export async function storeTags(tags: Tag[]): Promise<void> {
   }
 
   stmt.free();
-  await persistDatabase(db);
+  if (!options?.skipPersist) await persistDatabase(db);
 }
 
 export async function getStoredTxTags(): Promise<TxTag[]> {
@@ -156,7 +162,10 @@ export async function getStoredTxTags(): Promise<TxTag[]> {
   });
 }
 
-export async function storeTxTags(txTags: TxTag[]): Promise<void> {
+export async function storeTxTags(
+  txTags: TxTag[],
+  options?: { skipPersist?: boolean }
+): Promise<void> {
   const db = await getDatabase();
   db.run("DELETE FROM TX_TAG");
 
@@ -178,5 +187,5 @@ export async function storeTxTags(txTags: TxTag[]): Promise<void> {
   }
 
   stmt.free();
-  await persistDatabase(db);
+  if (!options?.skipPersist) await persistDatabase(db);
 }

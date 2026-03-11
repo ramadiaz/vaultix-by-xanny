@@ -84,7 +84,10 @@ export async function getStoredAssets(): Promise<Asset[]> {
   return assets;
 }
 
-export async function storeAssets(assets: Asset[]): Promise<void> {
+export async function storeAssets(
+  assets: Asset[],
+  options?: { skipPersist?: boolean }
+): Promise<void> {
   const db = await getDatabase();
   db.run("DELETE FROM ASSETS");
 
@@ -109,7 +112,7 @@ export async function storeAssets(assets: Asset[]): Promise<void> {
   }
 
   stmt.free();
-  await persistDatabase(db);
+  if (!options?.skipPersist) await persistDatabase(db);
 }
 
 export async function getStoredAssetGroups(): Promise<AssetGroup[]> {
@@ -149,7 +152,10 @@ export async function getStoredAssetGroups(): Promise<AssetGroup[]> {
   });
 }
 
-export async function storeAssetGroups(groups: AssetGroup[]): Promise<void> {
+export async function storeAssetGroups(
+  groups: AssetGroup[],
+  options?: { skipPersist?: boolean }
+): Promise<void> {
   const db = await getDatabase();
   db.run("DELETE FROM ASSETGROUP");
 
@@ -163,7 +169,7 @@ export async function storeAssetGroups(groups: AssetGroup[]): Promise<void> {
     stmt.run([g.uid, g.isDel ? 1 : 0, now, g.name, g.type, g.orderSeq]);
   }
   stmt.free();
-  await persistDatabase(db);
+  if (!options?.skipPersist) await persistDatabase(db);
 }
 
 export async function getStoredCurrencies(): Promise<Currency[]> {
@@ -224,7 +230,10 @@ export async function getStoredCurrencies(): Promise<Currency[]> {
   });
 }
 
-export async function storeCurrencies(currencies: Currency[]): Promise<void> {
+export async function storeCurrencies(
+  currencies: Currency[],
+  options?: { skipPersist?: boolean }
+): Promise<void> {
   const db = await getDatabase();
   db.run("DELETE FROM CURRENCY");
 
@@ -252,5 +261,5 @@ export async function storeCurrencies(currencies: Currency[]): Promise<void> {
     ]);
   }
   stmt.free();
-  await persistDatabase(db);
+  if (!options?.skipPersist) await persistDatabase(db);
 }

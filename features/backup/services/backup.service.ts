@@ -4,70 +4,57 @@ import {
   parseVaultixJson,
 } from "@/features/import-export/services/vaultix-import.service";
 import { VaultixExportData } from "@/features/import-export/types/import-export";
-import { getStoredAssets } from "@/features/wallets/services/wallet-storage.service";
-import { getStoredTransactions } from "@/features/transactions/services/transaction-storage.service";
-import { getStoredCategories } from "@/features/transactions/services/category-storage.service";
-import {
-  uploadBackup,
-  listBackups,
-  downloadBackup,
-  BackupListItem,
-} from "@/lib/api/backup.api";
-
-export type BackupItem = BackupListItem;
+import { sync as syncApi } from "@/lib/api/sync.api";
+import { computeDelta, setLastSynced } from "@/features/sync/services/delta.service";
+import { clearDeletedUidsPresentIn } from "@/features/sync/services/pending-sync.service";
 
 const DATA_RELOAD_EVENT = "vaultix:data-reload";
 
-export async function pullFromServer(): Promise<VaultixExportData | null> {
-  const res = await listBackups();
-  const items = res.data;
-  const latest = items[0];
-  if (!latest) return null;
-  const json = await downloadBackup(latest.id).then((r) => r.data);
-  return parseVaultixJson(json);
+type RawSyncData = Record<string, unknown> & Partial<VaultixExportData>;
+
+function toArray<T>(v: unknown): T[] {
+  return Array.isArray(v) ? v : [];
 }
 
-export async function pushToServer(): Promise<void> {
-  const data = await buildExportData();
-  const dateStr = data.exportedAt.split("T")[0];
-  await uploadBackup(data, dateStr);
+function normalizeMergedData(raw: unknown): VaultixExportData {
+  const data: RawSyncData = typeof raw === "string"
+    ? (parseVaultixJson(raw) as RawSyncData)
+    : (raw as RawSyncData);
+  const assets = toArray(data.wallets && !data.assets ? data.wallets : data.assets);
+  const categories = toArray(data.customCategories && !data.categories ? data.customCategories : data.categories);
+  return {
+    version: (data.version as number) ?? 2,
+    exportedAt: (data.exportedAt as string) ?? new Date().toISOString(),
+    assets: assets as VaultixExportData["assets"],
+    assetGroups: toArray(data.assetGroups) as VaultixExportData["assetGroups"],
+    currencies: toArray(data.currencies) as VaultixExportData["currencies"],
+    transactions: toArray(data.transactions) as VaultixExportData["transactions"],
+    categories: categories as VaultixExportData["categories"],
+  };
 }
 
 export async function performSync(): Promise<void> {
-  const [existingAssets, existingTransactions, existingCategories] =
-    await Promise.all([
-      getStoredAssets(),
-      getStoredTransactions(),
-      getStoredCategories(),
-    ]);
+  const current = await buildExportData();
+  const delta = computeDelta(current);
+  const merged = await syncApi(delta);
+  const normalized = normalizeMergedData(merged);
 
-  const serverData = await pullFromServer();
-  if (serverData) {
-    await applyVaultixImport(
-      serverData,
-      "merge",
-      existingAssets,
-      existingTransactions,
-      existingCategories
-    );
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent(DATA_RELOAD_EVENT));
-    }
+  await applyVaultixImport(
+    normalized,
+    "replace",
+    [],
+    [],
+    []
+  );
+
+  setLastSynced(normalized);
+  clearDeletedUidsPresentIn(
+    normalized.transactions.map((t) => t.uid),
+    normalized.assets.map((a) => a.uid),
+    normalized.categories.map((c) => c.uid)
+  );
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(DATA_RELOAD_EVENT));
   }
-
-  await pushToServer();
-}
-
-export async function syncToBackupServer(): Promise<void> {
-  await pushToServer();
-}
-
-export async function fetchBackupsFromServer(): Promise<BackupItem[]> {
-  const res = await listBackups();
-  return res.data;
-}
-
-export async function downloadBackupFromServer(id: string): Promise<string> {
-  const res = await downloadBackup(id);
-  return res.data;
 }

@@ -41,11 +41,7 @@ export default function SettingsPage() {
   const { signOut } = useAuth();
   const {
     state: backupState,
-    backups,
     sync: syncToBackup,
-    fetchBackups,
-    restore,
-    restoreLatest,
     clearState: clearBackupState,
   } = useBackupSync();
   const excelInputRef = useRef<HTMLInputElement>(null);
@@ -353,10 +349,10 @@ export default function SettingsPage() {
 
           <Card className="flex flex-col gap-3">
             <h3 className="text-sm font-semibold text-foreground">
-              Backup Sync
+              Sync
             </h3>
             <p className="text-[11px] leading-relaxed text-foreground/80">
-              Backup and restore your data to the cloud.
+              Sync your data to the cloud.
             </p>
             <div className="flex flex-col gap-2">
               <Button
@@ -364,11 +360,7 @@ export default function SettingsPage() {
                 variant="secondary"
                 className="h-9"
                 onClick={syncToBackup}
-                disabled={
-                  backupState.status === "syncing" ||
-                  backupState.status === "listing" ||
-                  backupState.status === "restoring"
-                }
+                disabled={backupState.status === "syncing"}
               >
                 {backupState.status === "syncing" ? (
                   <span className="flex items-center justify-center gap-2">
@@ -376,67 +368,11 @@ export default function SettingsPage() {
                     Syncing
                   </span>
                 ) : (
-                  "Sync to backup"
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                className="h-9"
-                onClick={fetchBackups}
-                disabled={
-                  backupState.status === "syncing" ||
-                  backupState.status === "listing" ||
-                  backupState.status === "restoring"
-                }
-              >
-                {backupState.status === "listing" ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <LoadingSpinner size="sm" />
-                    Loading
-                  </span>
-                ) : (
-                  "Restore from backup"
+                  "Sync"
                 )}
               </Button>
             </div>
-            {backups.length > 0 && (
-              <div className="flex flex-col gap-1 rounded-xl border border-border-subtle bg-background-soft p-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-medium text-muted-soft">
-                    Available backups
-                  </p>
-                  {backupState.status === "restoring" && (
-                    <span className="flex items-center gap-1.5 text-[10px] font-medium text-primary">
-                      <LoadingSpinner size="sm" />
-                      Restoring
-                    </span>
-                  )}
-                </div>
-                {backups.map((b) => (
-                  <div
-                    key={b.id}
-                    className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-background"
-                  >
-                    <span className="truncate text-xs text-foreground">
-                      {b.name}
-                    </span>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 text-xs"
-                      onClick={() => restore(b.id)}
-                      disabled={backupState.status === "restoring"}
-                    >
-                      Restore
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-            {(backupState.status === "synced" ||
-              backupState.status === "restored") && (
+            {backupState.status === "synced" && (
               <div className="flex flex-col gap-1">
                 <p className="text-[12px] font-medium text-success">
                   {backupState.message}

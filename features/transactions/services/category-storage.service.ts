@@ -51,7 +51,10 @@ export async function getStoredCategories(): Promise<Category[]> {
   });
 }
 
-export async function storeCategories(categories: Category[]): Promise<void> {
+export async function storeCategories(
+  categories: Category[],
+  options?: { skipPersist?: boolean }
+): Promise<void> {
   const db = await getDatabase();
   db.run("DELETE FROM ZCATEGORY");
 
@@ -74,5 +77,5 @@ export async function storeCategories(categories: Category[]): Promise<void> {
   }
 
   stmt.free();
-  await persistDatabase(db);
+  if (!options?.skipPersist) await persistDatabase(db);
 }

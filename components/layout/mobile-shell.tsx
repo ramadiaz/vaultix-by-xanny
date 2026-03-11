@@ -19,10 +19,7 @@ type MobileShellProps = {
 export function MobileShell({ title, activeTab, children }: MobileShellProps) {
   const { user } = useAuth();
   const { sync, state: syncState } = useBackupSync();
-  const isSyncing =
-    syncState.status === "syncing" ||
-    syncState.status === "listing" ||
-    syncState.status === "restoring";
+  const isSyncing = syncState.status === "syncing";
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">

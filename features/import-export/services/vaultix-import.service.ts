@@ -1,6 +1,10 @@
 import { storeAssets, storeAssetGroups, storeCurrencies } from "@/features/wallets/services/wallet-storage.service";
 import { storeTransactions, storeTags, storeTxTags } from "@/features/transactions/services/transaction-storage.service";
 import { storeCategories } from "@/features/transactions/services/category-storage.service";
+import { persistDatabase } from "@/lib/storage/sqlite-database";
+import { clearDeletedUidsPresentIn } from "@/features/sync/services/pending-sync.service";
+
+const BATCH = { skipPersist: true };
 import { VaultixExportData } from "../types/import-export";
 import { Asset } from "@/features/wallets/types/wallet";
 import { Transaction, Category } from "@/features/transactions/types/transaction";
@@ -41,13 +45,19 @@ export async function applyVaultixImport(
 ): Promise<VaultixImportResult> {
   if (mode === "replace") {
     await Promise.all([
-      storeAssets(data.assets),
-      storeTransactions(data.transactions),
-      storeCategories(data.categories ?? []),
+      storeAssets(data.assets, BATCH),
+      storeTransactions(data.transactions, BATCH),
+      storeCategories(data.categories ?? [], BATCH),
     ]);
+    if (data.assetGroups) await storeAssetGroups(data.assetGroups, BATCH);
+    if (data.currencies) await storeCurrencies(data.currencies, BATCH);
+    await persistDatabase();
 
-    if (data.assetGroups) await storeAssetGroups(data.assetGroups);
-    if (data.currencies) await storeCurrencies(data.currencies);
+    clearDeletedUidsPresentIn(
+      data.transactions.map((t) => t.uid),
+      data.assets.map((a) => a.uid),
+      (data.categories ?? []).map((c) => c.uid)
+    );
 
     return {
       assets: data.assets,
@@ -70,10 +80,11 @@ export async function applyVaultixImport(
   const mergedCategories = [...existingCategories, ...newCategories];
 
   await Promise.all([
-    storeAssets(mergedAssets),
-    storeTransactions(mergedTransactions),
-    storeCategories(mergedCategories),
+    storeAssets(mergedAssets, BATCH),
+    storeTransactions(mergedTransactions, BATCH),
+    storeCategories(mergedCategories, BATCH),
   ]);
+  await persistDatabase();
 
   return {
     assets: mergedAssets,
@@ -93,10 +104,11 @@ export async function applyMoneyManagerImport(
 ): Promise<VaultixImportResult> {
   if (mode === "replace") {
     await Promise.all([
-      storeAssets(assets),
-      storeTransactions(transactions),
-      storeCategories(categories),
+      storeAssets(assets, BATCH),
+      storeTransactions(transactions, BATCH),
+      storeCategories(categories, BATCH),
     ]);
+    await persistDatabase();
 
     return { assets, transactions, categories };
   }
@@ -112,10 +124,11 @@ export async function applyMoneyManagerImport(
   const mmMergedCats = [...existingCategories, ...mmNewCats];
 
   await Promise.all([
-    storeAssets(mmMergedAssets),
-    storeTransactions(mmMergedTxns),
-    storeCategories(mmMergedCats),
+    storeAssets(mmMergedAssets, BATCH),
+    storeTransactions(mmMergedTxns, BATCH),
+    storeCategories(mmMergedCats, BATCH),
   ]);
+  await persistDatabase();
 
   return {
     assets: mmMergedAssets,
@@ -133,15 +146,15 @@ export async function applyMmbakImport(
 ): Promise<VaultixImportResult> {
   if (mode === "replace") {
     await Promise.all([
-      storeAssets(data.assets),
-      storeTransactions(data.transactions),
-      storeCategories(data.categories),
+      storeAssets(data.assets, BATCH),
+      storeTransactions(data.transactions, BATCH),
+      storeCategories(data.categories, BATCH),
     ]);
-
-    if (data.assetGroups.length > 0) await storeAssetGroups(data.assetGroups);
-    if (data.currencies.length > 0) await storeCurrencies(data.currencies);
-    if (data.tags.length > 0) await storeTags(data.tags);
-    if (data.txTags.length > 0) await storeTxTags(data.txTags);
+    if (data.assetGroups.length > 0) await storeAssetGroups(data.assetGroups, BATCH);
+    if (data.currencies.length > 0) await storeCurrencies(data.currencies, BATCH);
+    if (data.tags.length > 0) await storeTags(data.tags, BATCH);
+    if (data.txTags.length > 0) await storeTxTags(data.txTags, BATCH);
+    await persistDatabase();
 
     return {
       assets: data.assets,
@@ -163,15 +176,15 @@ export async function applyMmbakImport(
   const bakMergedCats = [...existingCategories, ...bakNewCats];
 
   await Promise.all([
-    storeAssets(bakMergedAssets),
-    storeTransactions(bakMergedTxns),
-    storeCategories(bakMergedCats),
+    storeAssets(bakMergedAssets, BATCH),
+    storeTransactions(bakMergedTxns, BATCH),
+    storeCategories(bakMergedCats, BATCH),
   ]);
-
-  if (data.assetGroups.length > 0) await storeAssetGroups(data.assetGroups);
-  if (data.currencies.length > 0) await storeCurrencies(data.currencies);
-  if (data.tags.length > 0) await storeTags(data.tags);
-  if (data.txTags.length > 0) await storeTxTags(data.txTags);
+  if (data.assetGroups.length > 0) await storeAssetGroups(data.assetGroups, BATCH);
+  if (data.currencies.length > 0) await storeCurrencies(data.currencies, BATCH);
+  if (data.tags.length > 0) await storeTags(data.tags, BATCH);
+  if (data.txTags.length > 0) await storeTxTags(data.txTags, BATCH);
+  await persistDatabase();
 
   return {
     assets: bakMergedAssets,
