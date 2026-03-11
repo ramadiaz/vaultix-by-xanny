@@ -54,11 +54,12 @@ export function MobileShell({ title, activeTab, children }: MobileShellProps) {
             Stats
           </Button>
           <Button
-            variant="ghost"
+            asChild
+            variant={activeTab === "settings" ? "default" : "ghost"}
             size="sm"
             className="flex-1 rounded-full text-[11px] font-medium"
           >
-            Settings
+            <Link href="/settings">Settings</Link>
           </Button>
         </div>
       </nav>
