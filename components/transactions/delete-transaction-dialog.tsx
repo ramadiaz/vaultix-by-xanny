@@ -1,7 +1,7 @@
 "use client";
 
 import { Transaction } from "@/features/transactions/types/transaction";
-import { CATEGORY_LABELS } from "@/features/transactions/config/transaction-config";
+import { BUILTIN_CATEGORY_LABELS } from "@/features/transactions/config/transaction-config";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
@@ -33,7 +33,7 @@ export function DeleteTransactionDialog({
 
   const label =
     transaction.description ||
-    CATEGORY_LABELS[transaction.category] ||
+    BUILTIN_CATEGORY_LABELS[transaction.category] ||
     "this transaction";
 
   return (
