@@ -54,6 +54,19 @@ function generateUid(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function getCurrentMonthDateRange(): { fromDate: string; toDate: string } {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return {
+    fromDate: `${firstDay.getFullYear()}-${pad(firstDay.getMonth() + 1)}-${pad(firstDay.getDate())}`,
+    toDate: `${lastDay.getFullYear()}-${pad(lastDay.getMonth() + 1)}-${pad(lastDay.getDate())}`,
+  };
+}
+
 function applyBalanceForTx(txn: Transaction, updateBalance: AssetBalanceUpdater) {
   if (txn.doType === 2) {
     updateBalance(txn.assetUid, txn.money);
@@ -92,7 +105,10 @@ export function useTransactions(
     isLoading: true,
   });
 
-  const [filter, setFilter] = useState<TransactionFilter>({});
+  const [filter, setFilter] = useState<TransactionFilter>(() => {
+    const { fromDate, toDate } = getCurrentMonthDateRange();
+    return { fromDate, toDate };
+  });
 
   useEffect(() => {
     let mounted = true;
