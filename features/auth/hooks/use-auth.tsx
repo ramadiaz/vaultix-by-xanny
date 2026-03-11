@@ -18,8 +18,16 @@ type AuthState = {
 };
 
 type AuthContextValue = AuthState & {
-  login: (username: string, password: string) => Promise<void>;
-  register: (username: string, password: string) => Promise<void>;
+  login: (
+    username: string,
+    password: string,
+    turnstileResponse?: string
+  ) => Promise<void>;
+  register: (
+    username: string,
+    password: string,
+    turnstileResponse?: string
+  ) => Promise<void>;
   signOut: () => void;
 };
 
@@ -45,8 +53,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     });
   }, []);
 
-  async function login(username: string, password: string) {
-    const nextState = await loginWithCredentials(username, password);
+  async function login(
+    username: string,
+    password: string,
+    turnstileResponse?: string
+  ) {
+    const nextState = await loginWithCredentials(
+      username,
+      password,
+      turnstileResponse
+    );
     setState({
       user: nextState.user,
       token: nextState.token,
@@ -54,8 +70,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     });
   }
 
-  async function register(username: string, password: string) {
-    const nextState = await registerWithCredentials(username, password);
+  async function register(
+    username: string,
+    password: string,
+    turnstileResponse?: string
+  ) {
+    const nextState = await registerWithCredentials(
+      username,
+      password,
+      turnstileResponse
+    );
     setState({
       user: nextState.user,
       token: nextState.token,

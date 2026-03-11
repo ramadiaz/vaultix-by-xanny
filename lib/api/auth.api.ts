@@ -3,9 +3,14 @@ import { apiClient } from "./client";
 export type LoginRequest = {
   username: string;
   password: string;
+  turnstileResponse?: string;
 };
 
-export type RegisterRequest = LoginRequest;
+export type RegisterRequest = {
+  username: string;
+  password: string;
+  turnstileResponse?: string;
+};
 
 export type AuthResponse = {
   token: string;

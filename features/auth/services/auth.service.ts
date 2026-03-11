@@ -31,9 +31,12 @@ function toAuthUser(id: string, username: string): AuthUser {
 
 export async function loginWithCredentials(
   username: string,
-  password: string
+  password: string,
+  turnstileResponse?: string
 ): Promise<StoredAuthState> {
-  const res = await loginApi({ username, password });
+  const payload: Parameters<typeof loginApi>[0] = { username, password };
+  if (turnstileResponse) payload.turnstileResponse = turnstileResponse;
+  const res = await loginApi(payload);
   const { token, user } = res.data;
   const authUser = toAuthUser(user.id, user.username);
   const state: StoredAuthState = { user: authUser, token };
@@ -43,9 +46,12 @@ export async function loginWithCredentials(
 
 export async function registerWithCredentials(
   username: string,
-  password: string
+  password: string,
+  turnstileResponse?: string
 ): Promise<StoredAuthState> {
-  const res = await registerApi({ username, password });
+  const payload: Parameters<typeof registerApi>[0] = { username, password };
+  if (turnstileResponse) payload.turnstileResponse = turnstileResponse;
+  const res = await registerApi(payload);
   const { token, user } = res.data;
   const authUser = toAuthUser(user.id, user.username);
   const state: StoredAuthState = { user: authUser, token };
