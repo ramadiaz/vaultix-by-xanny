@@ -1,5 +1,6 @@
 "use client";
 
+import { ReactNode } from "react";
 import Link from "next/link";
 import { RefreshCw, Wallet, ArrowLeftRight, BarChart2, Settings, Vault } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,8 @@ export function DesktopSidebar({ activeTab }: DesktopSidebarProps) {
   const isSyncing = syncState.status === "syncing";
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col border-r border-glass-border bg-glass-bg/80 backdrop-blur-[var(--glass-blur-strong)]">
+    /* Hidden on mobile, shown as fixed sidebar on lg+ */
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-glass-border bg-glass-bg/80 backdrop-blur-[var(--glass-blur-strong)] lg:flex">
       {/* Gradient border right edge */}
       <div className="absolute inset-y-0 right-0 w-px [background:linear-gradient(180deg,transparent_0%,var(--primary)_30%,var(--success)_70%,transparent_100%)] opacity-30" />
 
@@ -80,7 +82,6 @@ export function DesktopSidebar({ activeTab }: DesktopSidebarProps) {
       {/* Bottom: sync + user */}
       {user && (
         <div className="flex flex-col gap-2 border-t border-glass-border px-3 py-4">
-          {/* Sync row */}
           <div className="flex items-center gap-2 rounded-xl px-2 py-1.5">
             <div className="relative shrink-0">
               {hasPendingSync && (
