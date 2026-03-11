@@ -1,14 +1,14 @@
 "use client";
 
-import { TransactionKind } from "@/features/transactions/types/transaction";
-import { Wallet } from "@/features/wallets/types/wallet";
-import { TRANSACTION_KIND_LABELS } from "@/features/transactions/config/transaction-config";
+import { DoType } from "@/features/transactions/types/transaction";
+import { Asset } from "@/features/wallets/types/wallet";
+import { DO_TYPE_LABELS } from "@/features/transactions/config/transaction-config";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils/cn";
 
 type TransactionFilter = {
-  walletId?: string;
-  kind?: TransactionKind;
+  assetUid?: string;
+  doType?: DoType;
   search?: string;
   fromDate?: string;
   toDate?: string;
@@ -16,33 +16,33 @@ type TransactionFilter = {
 
 type TransactionFiltersProps = {
   filter: TransactionFilter;
-  wallets: Wallet[];
+  assets: Asset[];
   onFilterChange: (filter: TransactionFilter) => void;
 };
 
-const kindFilterOptions: (TransactionKind | "all")[] = [
-  "all",
-  "income",
-  "expense",
-  "transfer",
+const kindFilterOptions: ({ value: DoType | "all"; label: string })[] = [
+  { value: "all", label: "All" },
+  { value: 2, label: DO_TYPE_LABELS[2] },
+  { value: 1, label: DO_TYPE_LABELS[1] },
+  { value: 3, label: "Transfer" },
 ];
 
 export function TransactionFilters({
   filter,
-  wallets,
+  assets,
   onFilterChange,
 }: TransactionFiltersProps) {
-  function handleKindChange(kind: TransactionKind | "all") {
+  function handleKindChange(value: DoType | "all") {
     onFilterChange({
       ...filter,
-      kind: kind === "all" ? undefined : kind,
+      doType: value === "all" ? undefined : value,
     });
   }
 
-  function handleWalletChange(walletId: string) {
+  function handleAssetChange(assetUid: string) {
     onFilterChange({
       ...filter,
-      walletId: walletId || undefined,
+      assetUid: assetUid || undefined,
     });
   }
 
@@ -67,7 +67,7 @@ export function TransactionFilters({
     });
   }
 
-  const activeWallets = wallets.filter((w) => !w.isArchived);
+  const activeAssets = assets.filter((a) => !a.isArchived);
 
   return (
     <div className="flex flex-col gap-3">
@@ -80,15 +80,15 @@ export function TransactionFilters({
       />
 
       <div className="flex gap-1">
-        {kindFilterOptions.map((kind) => {
+        {kindFilterOptions.map((opt) => {
           const isActive =
-            kind === "all" ? !filter.kind : filter.kind === kind;
+            opt.value === "all" ? filter.doType === undefined : filter.doType === opt.value;
 
           return (
             <button
-              key={kind}
+              key={String(opt.value)}
               type="button"
-              onClick={() => handleKindChange(kind)}
+              onClick={() => handleKindChange(opt.value)}
               className={cn(
                 "rounded-full px-2.5 py-1 text-[11px] font-medium transition",
                 isActive
@@ -96,7 +96,7 @@ export function TransactionFilters({
                   : "text-muted hover:text-foreground",
               )}
             >
-              {kind === "all" ? "All" : TRANSACTION_KIND_LABELS[kind]}
+              {opt.label}
             </button>
           );
         })}
@@ -104,14 +104,14 @@ export function TransactionFilters({
 
       <div className="flex items-center gap-2">
         <select
-          value={filter.walletId ?? ""}
-          onChange={(event) => handleWalletChange(event.target.value)}
+          value={filter.assetUid ?? ""}
+          onChange={(event) => handleAssetChange(event.target.value)}
           className="h-8 flex-1 rounded-xl border border-border-subtle bg-background-soft px-2 text-[11px] text-foreground outline-none focus:border-primary"
         >
           <option value="">All wallets</option>
-          {activeWallets.map((wallet) => (
-            <option key={wallet.id} value={wallet.id}>
-              {wallet.name}
+          {activeAssets.map((a) => (
+            <option key={a.uid} value={a.uid}>
+              {a.name}
             </option>
           ))}
         </select>

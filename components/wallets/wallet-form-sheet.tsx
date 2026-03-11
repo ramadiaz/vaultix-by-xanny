@@ -1,18 +1,12 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Asset, AssetGroupType, Currency } from "@/features/wallets/types/wallet";
 import {
-  Wallet,
-  WalletColor,
-  WalletCurrency,
-  WalletType,
-} from "@/features/wallets/types/wallet";
-import {
-  WALLET_COLOR_MAP,
-  WALLET_COLOR_OPTIONS,
-  WALLET_CURRENCY_OPTIONS,
-  WALLET_TYPE_LABELS,
-  WALLET_TYPE_OPTIONS,
+  ASSET_COLOR_MAP,
+  ASSET_COLOR_OPTIONS,
+  ASSET_GROUP_LABELS,
+  ASSET_GROUP_OPTIONS,
 } from "@/features/wallets/config/wallet-config";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -23,32 +17,33 @@ import { cn } from "@/lib/utils/cn";
 type WalletFormSheetProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  wallet?: Wallet | null;
-  onSubmit: (wallet: Wallet) => void;
+  asset?: Asset | null;
+  currencies: Currency[];
+  onSubmit: (asset: Asset) => void;
 };
 
-type WalletFormState = {
+type FormState = {
   name: string;
-  type: WalletType;
-  currency: WalletCurrency;
-  color: WalletColor;
+  groupUid: string;
+  currencyUid: string;
+  color: string;
   balance: string;
 };
 
-function walletToFormState(wallet: Wallet): WalletFormState {
+function assetToFormState(asset: Asset): FormState {
   return {
-    name: wallet.name,
-    type: wallet.type,
-    currency: wallet.currency,
-    color: wallet.color,
-    balance: String(wallet.balance),
+    name: asset.name,
+    groupUid: asset.groupUid,
+    currencyUid: asset.currencyUid,
+    color: asset.color,
+    balance: String(asset.balance),
   };
 }
 
-const DEFAULT_FORM_STATE: WalletFormState = {
+const DEFAULT_FORM: FormState = {
   name: "",
-  type: "cash",
-  currency: "IDR",
+  groupUid: "11",
+  currencyUid: "IDR_IDR",
   color: "sky",
   balance: "",
 };
@@ -56,89 +51,85 @@ const DEFAULT_FORM_STATE: WalletFormState = {
 export function WalletFormSheet({
   isOpen,
   onOpenChange,
-  wallet,
+  asset,
+  currencies,
   onSubmit,
 }: WalletFormSheetProps) {
-  const isEditing = !!wallet;
+  const isEditing = !!asset;
 
-  const [formState, setFormState] = useState<WalletFormState>(DEFAULT_FORM_STATE);
+  const [formState, setFormState] = useState<FormState>(DEFAULT_FORM);
 
   useEffect(() => {
-    if (isOpen && wallet) {
-      setFormState(walletToFormState(wallet));
+    if (isOpen && asset) {
+      setFormState(assetToFormState(asset));
     }
 
-    if (isOpen && !wallet) {
-      setFormState(DEFAULT_FORM_STATE);
+    if (isOpen && !asset) {
+      setFormState(DEFAULT_FORM);
     }
-  }, [isOpen, wallet]);
+  }, [isOpen, asset]);
 
   const isValid = useMemo(() => {
-    if (!formState.name.trim()) {
-      return false;
-    }
+    if (!formState.name.trim()) return false;
 
-    if (!isEditing && !formState.balance.trim()) {
-      return false;
-    }
+    if (!isEditing && !formState.balance.trim()) return false;
 
     if (!isEditing) {
       const numericBalance = Number(formState.balance.replace(/[^0-9.-]/g, ""));
-
-      if (Number.isNaN(numericBalance) || numericBalance < 0) {
-        return false;
-      }
+      if (Number.isNaN(numericBalance) || numericBalance < 0) return false;
     }
 
     return true;
   }, [formState.name, formState.balance, isEditing]);
 
-  function handleFieldChange<Key extends keyof WalletFormState>(
+  function handleFieldChange<Key extends keyof FormState>(
     key: Key,
-    value: WalletFormState[Key],
+    value: FormState[Key],
   ) {
-    setFormState((previous) => ({ ...previous, [key]: value }));
+    setFormState((prev) => ({ ...prev, [key]: value }));
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!isValid) {
-      return;
-    }
+    if (!isValid) return;
 
-    const now = new Date().toISOString();
+    const now = Date.now();
 
-    if (isEditing && wallet) {
-      const updated: Wallet = {
-        ...wallet,
+    if (isEditing && asset) {
+      const updated: Asset = {
+        ...asset,
         name: formState.name.trim(),
-        type: formState.type,
-        currency: formState.currency,
+        groupUid: formState.groupUid,
+        currencyUid: formState.currencyUid,
         color: formState.color,
-        updatedAt: now,
+        utime: now,
       };
 
       onSubmit(updated);
     } else {
       const rawBalance = Number(formState.balance.replace(/[^0-9.-]/g, ""));
 
-      const created: Wallet = {
-        id: `wallet_${Date.now()}`,
+      const created: Asset = {
+        uid: `asset_${now}`,
         name: formState.name.trim(),
-        type: formState.type,
-        currency: formState.currency,
-        color: formState.color,
+        groupUid: formState.groupUid,
+        currencyUid: formState.currencyUid,
+        orderSeq: 0,
         balance: rawBalance,
-        createdAt: now,
-        updatedAt: now,
         isArchived: false,
+        color: formState.color,
+        cardDayFin: null,
+        cardDayPay: null,
+        isTransExpense: false,
+        isCardAutoPay: false,
+        utime: now,
       };
 
       onSubmit(created);
     }
 
-    setFormState(DEFAULT_FORM_STATE);
+    setFormState(DEFAULT_FORM);
     onOpenChange(false);
   }
 
@@ -168,18 +159,18 @@ export function WalletFormSheet({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <Label htmlFor="wallet-type">Type</Label>
+              <Label htmlFor="wallet-group">Type</Label>
               <select
-                id="wallet-type"
-                value={formState.type}
+                id="wallet-group"
+                value={formState.groupUid}
                 onChange={(event) =>
-                  handleFieldChange("type", event.target.value as WalletType)
+                  handleFieldChange("groupUid", event.target.value)
                 }
                 className="h-9 rounded-2xl border border-border-subtle bg-background-soft px-3 text-sm text-foreground outline-none focus:border-primary"
               >
-                {WALLET_TYPE_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {WALLET_TYPE_LABELS[option]}
+                {ASSET_GROUP_OPTIONS.map((type) => (
+                  <option key={type} value={String(type)}>
+                    {ASSET_GROUP_LABELS[type]}
                   </option>
                 ))}
               </select>
@@ -189,15 +180,15 @@ export function WalletFormSheet({
               <Label htmlFor="wallet-currency">Currency</Label>
               <select
                 id="wallet-currency"
-                value={formState.currency}
+                value={formState.currencyUid}
                 onChange={(event) =>
-                  handleFieldChange("currency", event.target.value as WalletCurrency)
+                  handleFieldChange("currencyUid", event.target.value)
                 }
                 className="h-9 rounded-2xl border border-border-subtle bg-background-soft px-3 text-sm text-foreground outline-none focus:border-primary"
               >
-                {WALLET_CURRENCY_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                {currencies.map((c) => (
+                  <option key={c.uid} value={c.uid}>
+                    {c.iso} ({c.symbol})
                   </option>
                 ))}
               </select>
@@ -207,8 +198,8 @@ export function WalletFormSheet({
           <div className="flex flex-col gap-1.5">
             <Label>Color</Label>
             <div className="flex gap-2">
-              {WALLET_COLOR_OPTIONS.map((colorKey) => {
-                const colors = WALLET_COLOR_MAP[colorKey];
+              {ASSET_COLOR_OPTIONS.map((colorKey) => {
+                const colors = ASSET_COLOR_MAP[colorKey];
                 const isSelected = formState.color === colorKey;
 
                 return (

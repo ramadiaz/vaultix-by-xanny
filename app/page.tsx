@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Wallet } from "@/features/wallets/types/wallet";
+import { Asset } from "@/features/wallets/types/wallet";
 import { AuthGate } from "@/components/auth/auth-gate";
 import { MobileShell } from "@/components/layout/mobile-shell";
 import { WalletBalanceSummary } from "@/components/wallets/wallet-balance-summary";
@@ -15,58 +15,61 @@ import { Button } from "@/components/ui/button";
 export default function HomePage() {
   const {
     isLoading,
-    activeWallets,
-    archivedWallets,
-    addWallet,
-    updateWallet,
-    deleteWallet,
-    archiveWallet,
-    restoreWallet,
+    activeAssets,
+    archivedAssets,
+    currencies,
+    getGroupLabel,
+    getCurrencyIso,
+    addAsset,
+    updateAsset,
+    deleteAsset,
+    archiveAsset,
+    restoreAsset,
     adjustBalance,
   } = useWallets();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingWallet, setEditingWallet] = useState<Wallet | null>(null);
-  const [detailWallet, setDetailWallet] = useState<Wallet | null>(null);
+  const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
+  const [detailAsset, setDetailAsset] = useState<Asset | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [deletingWallet, setDeletingWallet] = useState<Wallet | null>(null);
+  const [deletingAsset, setDeletingAsset] = useState<Asset | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   function handleCreateOpen() {
-    setEditingWallet(null);
+    setEditingAsset(null);
     setIsFormOpen(true);
   }
 
-  function handleEditOpen(wallet: Wallet) {
-    setEditingWallet(wallet);
+  function handleEditOpen(asset: Asset) {
+    setEditingAsset(asset);
     setIsFormOpen(true);
   }
 
-  function handleFormSubmit(wallet: Wallet) {
-    if (editingWallet) {
-      updateWallet(wallet.id, {
-        name: wallet.name,
-        type: wallet.type,
-        currency: wallet.currency,
-        color: wallet.color,
+  function handleFormSubmit(asset: Asset) {
+    if (editingAsset) {
+      updateAsset(asset.uid, {
+        name: asset.name,
+        groupUid: asset.groupUid,
+        currencyUid: asset.currencyUid,
+        color: asset.color,
       });
     } else {
-      addWallet(wallet);
+      addAsset(asset);
     }
   }
 
-  function handleTapWallet(wallet: Wallet) {
-    setDetailWallet(wallet);
+  function handleTapAsset(asset: Asset) {
+    setDetailAsset(asset);
     setIsDetailOpen(true);
   }
 
-  function handleDeleteOpen(wallet: Wallet) {
-    setDeletingWallet(wallet);
+  function handleDeleteOpen(asset: Asset) {
+    setDeletingAsset(asset);
     setIsDeleteOpen(true);
   }
 
-  function handleDeleteConfirm(walletId: string) {
-    deleteWallet(walletId);
+  function handleDeleteConfirm(assetUid: string) {
+    deleteAsset(assetUid);
   }
 
   return (
@@ -78,16 +81,21 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            <WalletBalanceSummary wallets={activeWallets} />
+            <WalletBalanceSummary
+              assets={activeAssets}
+              getCurrencyIso={getCurrencyIso}
+            />
 
             <WalletList
-              activeWallets={activeWallets}
-              archivedWallets={archivedWallets}
-              onTapWallet={handleTapWallet}
-              onEditWallet={handleEditOpen}
-              onArchiveWallet={(wallet) => archiveWallet(wallet.id)}
-              onRestoreWallet={(wallet) => restoreWallet(wallet.id)}
-              onDeleteWallet={handleDeleteOpen}
+              activeAssets={activeAssets}
+              archivedAssets={archivedAssets}
+              getGroupLabel={getGroupLabel}
+              getCurrencyIso={getCurrencyIso}
+              onTapAsset={handleTapAsset}
+              onEditAsset={handleEditOpen}
+              onArchiveAsset={(asset) => archiveAsset(asset.uid)}
+              onRestoreAsset={(asset) => restoreAsset(asset.uid)}
+              onDeleteAsset={handleDeleteOpen}
             />
           </div>
         )}
@@ -104,23 +112,26 @@ export default function HomePage() {
         <WalletFormSheet
           isOpen={isFormOpen}
           onOpenChange={setIsFormOpen}
-          wallet={editingWallet}
+          asset={editingAsset}
+          currencies={currencies}
           onSubmit={handleFormSubmit}
         />
 
         <WalletDetailSheet
-          wallet={detailWallet}
+          asset={detailAsset}
+          groupLabel={detailAsset ? getGroupLabel(detailAsset.groupUid) : ""}
+          currencyIso={detailAsset ? getCurrencyIso(detailAsset.currencyUid) : "IDR"}
           isOpen={isDetailOpen}
           onOpenChange={setIsDetailOpen}
           onEdit={handleEditOpen}
           onAdjustBalance={adjustBalance}
-          onArchive={(wallet) => archiveWallet(wallet.id)}
-          onRestore={(wallet) => restoreWallet(wallet.id)}
+          onArchive={(asset) => archiveAsset(asset.uid)}
+          onRestore={(asset) => restoreAsset(asset.uid)}
           onDelete={handleDeleteOpen}
         />
 
         <DeleteWalletDialog
-          wallet={deletingWallet}
+          asset={deletingAsset}
           isOpen={isDeleteOpen}
           onOpenChange={setIsDeleteOpen}
           onConfirm={handleDeleteConfirm}

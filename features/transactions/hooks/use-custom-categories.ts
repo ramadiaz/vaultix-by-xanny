@@ -1,64 +1,66 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CustomCategory } from "../types/transaction";
+import { Category } from "../types/transaction";
 import {
-  getStoredCustomCategories,
-  storeCustomCategories,
+  getStoredCategories,
+  storeCategories,
 } from "../services/category-storage.service";
 
-type UseCustomCategoriesValue = {
-  customCategories: CustomCategory[];
+type UseCategoriesValue = {
+  categories: Category[];
   isLoading: boolean;
-  addCategory: (category: CustomCategory) => void;
-  updateCategory: (categoryId: string, updates: Partial<Omit<CustomCategory, "id">>) => void;
-  deleteCategory: (categoryId: string) => void;
+  addCategory: (category: Category) => void;
+  updateCategory: (categoryUid: string, updates: Partial<Omit<Category, "uid">>) => void;
+  deleteCategory: (categoryUid: string) => void;
 };
 
-export function useCustomCategories(): UseCustomCategoriesValue {
-  const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
+export function useCategories(): UseCategoriesValue {
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setCustomCategories(getStoredCustomCategories());
+    setCategories(getStoredCategories());
     setIsLoading(false);
   }, []);
 
-  function persist(next: CustomCategory[]) {
-    storeCustomCategories(next);
+  function persist(next: Category[]) {
+    storeCategories(next);
   }
 
-  function addCategory(category: CustomCategory) {
-    setCustomCategories((previous) => {
-      const next = [...previous, category];
+  function addCategory(category: Category) {
+    setCategories((prev) => {
+      const next = [...prev, category];
       persist(next);
       return next;
     });
   }
 
   function updateCategory(
-    categoryId: string,
-    updates: Partial<Omit<CustomCategory, "id">>,
+    categoryUid: string,
+    updates: Partial<Omit<Category, "uid">>,
   ) {
-    setCustomCategories((previous) => {
-      const next = previous.map((cat) =>
-        cat.id === categoryId ? { ...cat, ...updates } : cat,
+    setCategories((prev) => {
+      const next = prev.map((c) =>
+        c.uid === categoryUid ? { ...c, ...updates, utime: Date.now() } : c,
       );
       persist(next);
       return next;
     });
   }
 
-  function deleteCategory(categoryId: string) {
-    setCustomCategories((previous) => {
-      const next = previous.filter((cat) => cat.id !== categoryId);
+  function deleteCategory(categoryUid: string) {
+    setCategories((prev) => {
+      const next = prev.map((c) =>
+        c.uid === categoryUid ? { ...c, isDel: true, utime: Date.now() } : c,
+      );
       persist(next);
       return next;
     });
   }
 
   return {
-    customCategories,
+    categories,
     isLoading,
     addCategory,
     updateCategory,

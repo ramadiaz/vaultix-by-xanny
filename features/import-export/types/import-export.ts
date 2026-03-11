@@ -1,13 +1,14 @@
-import { Transaction } from "@/features/transactions/types/transaction";
-import { Wallet } from "@/features/wallets/types/wallet";
-import { CustomCategory } from "@/features/transactions/types/transaction";
+import { Transaction, Category } from "@/features/transactions/types/transaction";
+import { Asset, AssetGroup, Currency } from "@/features/wallets/types/wallet";
 
 export type VaultixExportData = {
   version: number;
   exportedAt: string;
-  wallets: Wallet[];
+  assets: Asset[];
+  assetGroups: AssetGroup[];
+  currencies: Currency[];
   transactions: Transaction[];
-  customCategories: CustomCategory[];
+  categories: Category[];
 };
 
 export type MoneyManagerRow = {
@@ -24,13 +25,13 @@ export type MoneyManagerRow = {
 };
 
 export type ImportResult = {
-  wallets: Wallet[];
+  assets: Asset[];
   transactions: Transaction[];
-  customCategories: CustomCategory[];
+  categories: Category[];
   summary: {
-    totalWallets: number;
+    totalAssets: number;
     totalTransactions: number;
-    totalCustomCategories: number;
+    totalCategories: number;
     skippedTransferIn: number;
   };
 };

@@ -1,36 +1,48 @@
-import { WalletCurrency } from "../types/wallet";
+import { Currency } from "../types/wallet";
 
-const LOCALE_MAP: Record<WalletCurrency, string> = {
+const ISO_LOCALE_MAP: Record<string, string> = {
   IDR: "id-ID",
   USD: "en-US",
   EUR: "de-DE",
   SGD: "en-SG",
-  OTHER: "en-US",
 };
 
-export function formatCurrency(
+export function formatCurrencyByIso(
   amount: number,
-  currency: WalletCurrency,
+  iso: string,
 ): string {
-  if (currency === "OTHER") {
-    return amount.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  const locale = ISO_LOCALE_MAP[iso] ?? "en-US";
+
+  if (!ISO_LOCALE_MAP[iso]) {
+    return amount.toLocaleString(locale, { maximumFractionDigits: 0 });
   }
 
-  return amount.toLocaleString(LOCALE_MAP[currency], {
+  return amount.toLocaleString(locale, {
     style: "currency",
-    currency,
+    currency: iso,
     maximumFractionDigits: 0,
   });
 }
 
+export function formatCurrencyByEntity(
+  amount: number,
+  currency: Currency | undefined,
+): string {
+  if (!currency) {
+    return formatCurrencyByIso(amount, "IDR");
+  }
+
+  return formatCurrencyByIso(amount, currency.iso);
+}
+
 export function formatSignedCurrency(
   amount: number,
-  currency: WalletCurrency,
-  kind: "income" | "expense" | "adjustment",
+  iso: string,
+  direction: "income" | "expense" | "adjustment",
 ): string {
-  const formatted = formatCurrency(Math.abs(amount), currency);
+  const formatted = formatCurrencyByIso(Math.abs(amount), iso);
 
-  if (kind === "income" || (kind === "adjustment" && amount > 0)) {
+  if (direction === "income" || (direction === "adjustment" && amount > 0)) {
     return `+${formatted}`;
   }
 

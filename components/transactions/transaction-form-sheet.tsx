@@ -1,20 +1,15 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Category, DoType } from "@/features/transactions/types/transaction";
+import { DisplayTransaction } from "@/features/transactions/hooks/use-transactions";
 import {
-  CustomCategory,
-  Transaction,
-  TransactionCategory,
-  TransactionKind,
-} from "@/features/transactions/types/transaction";
-import {
-  getCategoriesForKind,
+  getCategoriesForDoType,
+  getCategoryDisplayName,
   getCategoryIcon,
-  getCategoryLabel,
-  TRANSACTION_KIND_LABELS,
-  TRANSACTION_KIND_OPTIONS,
+  KIND_OPTIONS,
 } from "@/features/transactions/config/transaction-config";
-import { Wallet } from "@/features/wallets/types/wallet";
+import { Asset } from "@/features/wallets/types/wallet";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -24,57 +19,71 @@ import { cn } from "@/lib/utils/cn";
 type TransactionFormSheetProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  wallets: Wallet[];
-  customCategories: CustomCategory[];
-  transaction?: Transaction | null;
-  onSubmit: (transaction: Transaction) => void;
-  onUpdate?: (
-    transactionId: string,
-    updates: Partial<Omit<Transaction, "id" | "createdAt">>,
-    original: Transaction,
+  assets: Asset[];
+  categories: Category[];
+  transaction?: DisplayTransaction | null;
+  onSubmitIncomeExpense: (txn: {
+    assetUid: string;
+    ctgUid: string;
+    doType: DoType;
+    money: number;
+    content: string;
+    date: number;
+    currencyUid: string;
+  }) => void;
+  onSubmitTransfer: (params: {
+    fromAssetUid: string;
+    toAssetUid: string;
+    money: number;
+    fee: number;
+    content: string;
+    date: number;
+    currencyUid: string;
+  }) => void;
+  onUpdateIncomeExpense?: (
+    txnUid: string,
+    updates: Record<string, unknown>,
+    original: DisplayTransaction,
   ) => void;
-  onAddCustomCategory?: (category: CustomCategory) => void;
+  onAddCategory?: (category: Category) => void;
 };
 
-type TransactionFormState = {
-  walletId: string;
-  targetWalletId: string;
-  kind: TransactionKind;
-  category: TransactionCategory;
+type FormState = {
+  assetUid: string;
+  toAssetUid: string;
+  doType: DoType;
+  ctgUid: string;
   amount: string;
   fee: string;
-  description: string;
-  note: string;
-  occurredAt: string;
+  content: string;
+  date: string;
 };
 
 function todayDateString(): string {
   return new Date().toISOString().split("T")[0];
 }
 
-const DEFAULT_FORM: TransactionFormState = {
-  walletId: "",
-  targetWalletId: "",
-  kind: "expense",
-  category: "food",
+const DEFAULT_FORM: FormState = {
+  assetUid: "",
+  toAssetUid: "",
+  doType: 1,
+  ctgUid: "6",
   amount: "",
   fee: "",
-  description: "",
-  note: "",
-  occurredAt: todayDateString(),
+  content: "",
+  date: todayDateString(),
 };
 
-function transactionToForm(txn: Transaction): TransactionFormState {
+function txnToForm(txn: DisplayTransaction): FormState {
   return {
-    walletId: txn.walletId,
-    targetWalletId: txn.targetWalletId ?? "",
-    kind: txn.kind,
-    category: txn.category ?? "other",
-    amount: String(txn.amount),
-    fee: txn.fee ? String(txn.fee) : "",
-    description: txn.description ?? "",
-    note: txn.note ?? "",
-    occurredAt: (txn.occurredAt ?? "").split("T")[0] || todayDateString(),
+    assetUid: txn.assetUid,
+    toAssetUid: txn.toAssetUid ?? txn.pairedTx?.assetUid ?? "",
+    doType: txn.doType === 4 ? 3 : txn.doType,
+    ctgUid: txn.ctgUid ?? "",
+    amount: String(txn.money),
+    fee: txn.feeTx ? String(txn.feeTx.money) : "",
+    content: txn.content ?? "",
+    date: new Date(txn.date).toISOString().split("T")[0],
   };
 }
 
@@ -86,16 +95,17 @@ type NewCategoryFormState = {
 export function TransactionFormSheet({
   isOpen,
   onOpenChange,
-  wallets,
-  customCategories,
+  assets,
+  categories,
   transaction,
-  onSubmit,
-  onUpdate,
-  onAddCustomCategory,
+  onSubmitIncomeExpense,
+  onSubmitTransfer,
+  onUpdateIncomeExpense,
+  onAddCategory,
 }: TransactionFormSheetProps) {
   const isEditing = !!transaction;
 
-  const [formState, setFormState] = useState<TransactionFormState>(DEFAULT_FORM);
+  const [formState, setFormState] = useState<FormState>(DEFAULT_FORM);
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [newCategoryForm, setNewCategoryForm] = useState<NewCategoryFormState>({
     name: "",
@@ -104,74 +114,50 @@ export function TransactionFormSheet({
 
   useEffect(() => {
     if (isOpen && transaction) {
-      setFormState(transactionToForm(transaction));
+      setFormState(txnToForm(transaction));
     }
 
     if (isOpen && !transaction) {
-      setFormState({ ...DEFAULT_FORM, occurredAt: todayDateString() });
+      setFormState({ ...DEFAULT_FORM, date: todayDateString() });
     }
 
     setShowNewCategory(false);
   }, [isOpen, transaction]);
 
+  const isTransfer = formState.doType === 3;
+
   const categoryOptions = useMemo(
-    () => getCategoriesForKind(formState.kind, customCategories),
-    [formState.kind, customCategories],
+    () => getCategoriesForDoType(formState.doType, categories),
+    [formState.doType, categories],
   );
 
   const isValid = useMemo(() => {
-    if (!formState.walletId) {
-      return false;
-    }
-
-    if (formState.kind === "transfer" && !formState.targetWalletId) {
-      return false;
-    }
-
-    if (
-      formState.kind === "transfer" &&
-      formState.walletId === formState.targetWalletId
-    ) {
-      return false;
-    }
+    if (!formState.assetUid) return false;
+    if (isTransfer && !formState.toAssetUid) return false;
+    if (isTransfer && formState.assetUid === formState.toAssetUid) return false;
 
     const numericAmount = Number(formState.amount.replace(/[^0-9.-]/g, ""));
-
-    if (Number.isNaN(numericAmount) || numericAmount <= 0) {
-      return false;
-    }
-
-    if (!formState.occurredAt) {
-      return false;
-    }
+    if (Number.isNaN(numericAmount) || numericAmount <= 0) return false;
+    if (!formState.date) return false;
 
     return true;
-  }, [
-    formState.walletId,
-    formState.targetWalletId,
-    formState.kind,
-    formState.amount,
-    formState.occurredAt,
-  ]);
+  }, [formState.assetUid, formState.toAssetUid, formState.doType, formState.amount, formState.date, isTransfer]);
 
-  function handleFieldChange<Key extends keyof TransactionFormState>(
+  function handleFieldChange<Key extends keyof FormState>(
     key: Key,
-    value: TransactionFormState[Key],
+    value: FormState[Key],
   ) {
-    setFormState((previous) => {
-      const next = { ...previous, [key]: value };
+    setFormState((prev) => {
+      const next = { ...prev, [key]: value };
 
-      if (key === "kind") {
-        const nextCategories = getCategoriesForKind(
-          value as TransactionKind,
-          customCategories,
-        );
-        if (!nextCategories.includes(next.category)) {
-          next.category = nextCategories[0];
+      if (key === "doType") {
+        const cats = getCategoriesForDoType(value as DoType, categories);
+        if (cats.length > 0 && !cats.find((c) => c.uid === next.ctgUid)) {
+          next.ctgUid = cats[0].uid;
         }
 
-        if ((value as TransactionKind) !== "transfer") {
-          next.targetWalletId = "";
+        if ((value as DoType) !== 3) {
+          next.toAssetUid = "";
           next.fee = "";
         }
       }
@@ -181,21 +167,23 @@ export function TransactionFormSheet({
   }
 
   function handleAddCustomCategory() {
-    if (!newCategoryForm.name.trim() || !onAddCustomCategory) {
-      return;
-    }
+    if (!newCategoryForm.name.trim() || !onAddCategory) return;
 
-    const kindForCategory = formState.kind === "transfer" ? "expense" : formState.kind;
+    const catType = formState.doType === 2 ? 0 : 1;
 
-    const newCategory: CustomCategory = {
-      id: `custom_${Date.now()}`,
-      name: newCategoryForm.name.trim(),
-      icon: newCategoryForm.icon || "📌",
-      kind: kindForCategory as "income" | "expense",
+    const newCategory: Category = {
+      uid: `cat_${Date.now()}`,
+      name: `${newCategoryForm.icon} ${newCategoryForm.name.trim()}`,
+      type: catType as 0 | 1,
+      status: 0,
+      pUid: null,
+      orderSeq: 99,
+      isDel: false,
+      utime: Date.now(),
     };
 
-    onAddCustomCategory(newCategory);
-    setFormState((prev) => ({ ...prev, category: newCategory.id }));
+    onAddCategory(newCategory);
+    setFormState((prev) => ({ ...prev, ctgUid: newCategory.uid }));
     setNewCategoryForm({ name: "", icon: "📌" });
     setShowNewCategory(false);
   }
@@ -203,57 +191,58 @@ export function TransactionFormSheet({
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!isValid) {
-      return;
-    }
+    if (!isValid) return;
 
     const rawAmount = Number(formState.amount.replace(/[^0-9.-]/g, ""));
-    const rawFee = formState.fee
-      ? Number(formState.fee.replace(/[^0-9.-]/g, ""))
-      : 0;
-    const now = new Date().toISOString();
-    const occurredAtISO = new Date(formState.occurredAt).toISOString();
+    const rawFee = formState.fee ? Number(formState.fee.replace(/[^0-9.-]/g, "")) : 0;
+    const dateMs = new Date(formState.date).getTime();
 
-    if (isEditing && transaction && onUpdate) {
-      onUpdate(
-        transaction.id,
+    const selectedAsset = assets.find((a) => a.uid === formState.assetUid);
+    const currencyUid = selectedAsset?.currencyUid ?? "IDR_IDR";
+
+    if (isTransfer) {
+      onSubmitTransfer({
+        fromAssetUid: formState.assetUid,
+        toAssetUid: formState.toAssetUid,
+        money: rawAmount,
+        fee: rawFee,
+        content: formState.content.trim(),
+        date: dateMs,
+        currencyUid,
+      });
+    } else if (isEditing && transaction && onUpdateIncomeExpense) {
+      onUpdateIncomeExpense(
+        transaction.uid,
         {
-          walletId: formState.walletId,
-          targetWalletId: formState.targetWalletId || null,
-          kind: formState.kind,
-          category: formState.category,
-          amount: rawAmount,
-          fee: rawFee,
-          description: formState.description.trim(),
-          note: formState.note.trim(),
-          occurredAt: occurredAtISO,
+          assetUid: formState.assetUid,
+          ctgUid: formState.ctgUid || null,
+          doType: formState.doType,
+          money: rawAmount,
+          inMoney: rawAmount,
+          amountAccount: rawAmount,
+          content: formState.content.trim(),
+          date: dateMs,
+          currencyUid,
         },
         transaction,
       );
     } else {
-      const created: Transaction = {
-        id: `txn_${Date.now()}`,
-        walletId: formState.walletId,
-        targetWalletId: formState.targetWalletId || null,
-        kind: formState.kind,
-        category: formState.category,
-        amount: rawAmount,
-        fee: rawFee,
-        description: formState.description.trim(),
-        note: formState.note.trim(),
-        occurredAt: occurredAtISO,
-        createdAt: now,
-        updatedAt: now,
-      };
-
-      onSubmit(created);
+      onSubmitIncomeExpense({
+        assetUid: formState.assetUid,
+        ctgUid: formState.ctgUid,
+        doType: formState.doType,
+        money: rawAmount,
+        content: formState.content.trim(),
+        date: dateMs,
+        currencyUid,
+      });
     }
 
-    setFormState({ ...DEFAULT_FORM, occurredAt: todayDateString() });
+    setFormState({ ...DEFAULT_FORM, date: todayDateString() });
     onOpenChange(false);
   }
 
-  const activeWallets = wallets.filter((w) => !w.isArchived);
+  const activeAssets = assets.filter((a) => !a.isArchived);
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -269,72 +258,64 @@ export function TransactionFormSheet({
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 text-xs">
           <div className="flex gap-1 rounded-xl bg-background-soft p-1">
-            {TRANSACTION_KIND_OPTIONS.map((kind) => (
+            {KIND_OPTIONS.map((opt) => (
               <button
-                key={kind}
+                key={opt.value}
                 type="button"
-                onClick={() => handleFieldChange("kind", kind)}
+                onClick={() => handleFieldChange("doType", opt.value)}
                 className={cn(
                   "flex-1 rounded-lg px-2 py-2 text-center text-[11px] font-medium transition",
-                  formState.kind === kind
-                    ? kind === "income"
+                  formState.doType === opt.value
+                    ? opt.value === 2
                       ? "bg-success/15 text-success"
-                      : kind === "expense"
+                      : opt.value === 1
                         ? "bg-danger/15 text-danger"
                         : "bg-primary/15 text-primary"
                     : "text-muted hover:text-foreground",
                 )}
               >
-                {TRANSACTION_KIND_LABELS[kind]}
+                {opt.label}
               </button>
             ))}
           </div>
 
           <div className="flex flex-col gap-1">
             <Label htmlFor="txn-wallet">
-              {formState.kind === "transfer" ? "From wallet" : "Wallet"}
+              {isTransfer ? "From wallet" : "Wallet"}
             </Label>
             <select
               id="txn-wallet"
-              value={formState.walletId}
-              onChange={(event) =>
-                handleFieldChange("walletId", event.target.value)
-              }
+              value={formState.assetUid}
+              onChange={(event) => handleFieldChange("assetUid", event.target.value)}
               className="h-9 rounded-2xl border border-border-subtle bg-background-soft px-3 text-sm text-foreground outline-none focus:border-primary"
             >
               <option value="">Select wallet</option>
-              {activeWallets.map((wallet) => (
-                <option key={wallet.id} value={wallet.id}>
-                  {wallet.name}
-                </option>
+              {activeAssets.map((a) => (
+                <option key={a.uid} value={a.uid}>{a.name}</option>
               ))}
             </select>
           </div>
 
-          {formState.kind === "transfer" && (
+          {isTransfer && (
             <div className="flex flex-col gap-1">
               <Label htmlFor="txn-target-wallet">To wallet</Label>
               <select
                 id="txn-target-wallet"
-                value={formState.targetWalletId}
-                onChange={(event) =>
-                  handleFieldChange("targetWalletId", event.target.value)
-                }
+                value={formState.toAssetUid}
+                onChange={(event) => handleFieldChange("toAssetUid", event.target.value)}
                 className="h-9 rounded-2xl border border-border-subtle bg-background-soft px-3 text-sm text-foreground outline-none focus:border-primary"
               >
                 <option value="">Select wallet</option>
-                {activeWallets
-                  .filter((wallet) => wallet.id !== formState.walletId)
-                  .map((wallet) => (
-                    <option key={wallet.id} value={wallet.id}>
-                      {wallet.name}
-                    </option>
+                {activeAssets
+                  .filter((a) => a.uid !== formState.assetUid)
+                  .map((a) => (
+                    <option key={a.uid} value={a.uid}>{a.name}</option>
                   ))}
               </select>
             </div>
           )}
 
-          <div className={cn("grid gap-3", formState.kind === "transfer" ? "grid-cols-3" : "grid-cols-2")}>
+          <div className={cn("grid gap-3", isTransfer ? "grid-cols-3" : "grid-cols-2")}>
             <div className="flex flex-col gap-1">
               <Label htmlFor="txn-amount">Amount</Label>
               <Input
@@ -342,14 +323,12 @@ export function TransactionFormSheet({
                 type="tel"
                 inputMode="numeric"
                 value={formState.amount}
-                onChange={(event) =>
-                  handleFieldChange("amount", event.target.value)
-                }
+                onChange={(event) => handleFieldChange("amount", event.target.value)}
                 placeholder="0"
               />
             </div>
 
-            {formState.kind === "transfer" && (
+            {isTransfer && (
               <div className="flex flex-col gap-1">
                 <Label htmlFor="txn-fee">Fee</Label>
                 <Input
@@ -357,9 +336,7 @@ export function TransactionFormSheet({
                   type="tel"
                   inputMode="numeric"
                   value={formState.fee}
-                  onChange={(event) =>
-                    handleFieldChange("fee", event.target.value)
-                  }
+                  onChange={(event) => handleFieldChange("fee", event.target.value)}
                   placeholder="0"
                 />
               </div>
@@ -370,15 +347,13 @@ export function TransactionFormSheet({
               <Input
                 id="txn-date"
                 type="date"
-                value={formState.occurredAt}
-                onChange={(event) =>
-                  handleFieldChange("occurredAt", event.target.value)
-                }
+                value={formState.date}
+                onChange={(event) => handleFieldChange("date", event.target.value)}
               />
             </div>
           </div>
 
-          {formState.kind !== "transfer" && (
+          {!isTransfer && (
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
                 <Label>Category</Label>
@@ -397,10 +372,7 @@ export function TransactionFormSheet({
                     type="text"
                     value={newCategoryForm.icon}
                     onChange={(event) =>
-                      setNewCategoryForm((p) => ({
-                        ...p,
-                        icon: event.target.value,
-                      }))
+                      setNewCategoryForm((p) => ({ ...p, icon: event.target.value }))
                     }
                     className="h-8 w-12 text-center text-base"
                     placeholder="📌"
@@ -409,10 +381,7 @@ export function TransactionFormSheet({
                     type="text"
                     value={newCategoryForm.name}
                     onChange={(event) =>
-                      setNewCategoryForm((p) => ({
-                        ...p,
-                        name: event.target.value,
-                      }))
+                      setNewCategoryForm((p) => ({ ...p, name: event.target.value }))
                     }
                     className="h-8 flex-1"
                     placeholder="Category name"
@@ -432,18 +401,18 @@ export function TransactionFormSheet({
               <div className="flex flex-wrap gap-1.5">
                 {categoryOptions.map((cat) => (
                   <button
-                    key={cat}
+                    key={cat.uid}
                     type="button"
-                    onClick={() => handleFieldChange("category", cat)}
+                    onClick={() => handleFieldChange("ctgUid", cat.uid)}
                     className={cn(
                       "rounded-full px-2.5 py-1.5 text-[11px] font-medium transition",
-                      formState.category === cat
+                      formState.ctgUid === cat.uid
                         ? "bg-primary/15 text-primary ring-1 ring-primary/30"
                         : "bg-background-soft text-muted hover:text-foreground",
                     )}
                   >
-                    {getCategoryIcon(cat, customCategories)}{" "}
-                    {getCategoryLabel(cat, customCategories)}
+                    {getCategoryIcon(cat.uid, categories)}{" "}
+                    {getCategoryDisplayName(cat.uid, categories)}
                   </button>
                 ))}
               </div>
@@ -451,28 +420,13 @@ export function TransactionFormSheet({
           )}
 
           <div className="flex flex-col gap-1">
-            <Label htmlFor="txn-description">Description</Label>
+            <Label htmlFor="txn-content">Description</Label>
             <Input
-              id="txn-description"
+              id="txn-content"
               type="text"
-              value={formState.description}
-              onChange={(event) =>
-                handleFieldChange("description", event.target.value)
-              }
+              value={formState.content}
+              onChange={(event) => handleFieldChange("content", event.target.value)}
               placeholder="e.g. Coffee, salary, groceries"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="txn-note">Note (optional)</Label>
-            <Input
-              id="txn-note"
-              type="text"
-              value={formState.note}
-              onChange={(event) =>
-                handleFieldChange("note", event.target.value)
-              }
-              placeholder="Any extra details"
             />
           </div>
 

@@ -1,32 +1,27 @@
 "use client";
 
-import { Wallet } from "@/features/wallets/types/wallet";
+import { Asset } from "@/features/wallets/types/wallet";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
 type DeleteWalletDialogProps = {
-  wallet: Wallet | null;
+  asset: Asset | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (walletId: string) => void;
+  onConfirm: (assetUid: string) => void;
 };
 
 export function DeleteWalletDialog({
-  wallet,
+  asset,
   isOpen,
   onOpenChange,
   onConfirm,
 }: DeleteWalletDialogProps) {
-  if (!wallet) {
-    return null;
-  }
+  if (!asset) return null;
 
   function handleConfirm() {
-    if (!wallet) {
-      return;
-    }
-
-    onConfirm(wallet.id);
+    if (!asset) return;
+    onConfirm(asset.uid);
     onOpenChange(false);
   }
 
@@ -38,7 +33,7 @@ export function DeleteWalletDialog({
             <h2 className="text-base font-semibold text-foreground">Delete wallet</h2>
             <p className="text-[12px] leading-relaxed text-muted">
               Are you sure you want to permanently delete{" "}
-              <span className="font-semibold text-foreground">{wallet.name}</span>?
+              <span className="font-semibold text-foreground">{asset.name}</span>?
               This action cannot be undone and all associated data will be lost.
             </p>
           </div>

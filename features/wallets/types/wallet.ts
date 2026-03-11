@@ -1,30 +1,47 @@
-export type WalletType = "cash" | "bank" | "card" | "investment" | "other";
+export type AssetGroupType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
 
-export type WalletCurrency = "IDR" | "USD" | "EUR" | "SGD" | "OTHER";
-
-export type WalletColor =
-  | "sky"
-  | "emerald"
-  | "violet"
-  | "rose"
-  | "amber"
-  | "slate";
-
-export type Wallet = {
-  id: string;
+export type AssetGroup = {
+  uid: string;
   name: string;
-  type: WalletType;
-  currency: WalletCurrency;
-  color: WalletColor;
-  balance: number;
-  createdAt: string;
-  updatedAt: string;
-  isArchived: boolean;
+  type: AssetGroupType;
+  orderSeq: number;
+  isDel: boolean;
 };
 
-export type WalletBalanceAdjustment = {
-  walletId: string;
+export type Asset = {
+  uid: string;
+  name: string;
+  groupUid: string;
+  currencyUid: string;
+  orderSeq: number;
+  balance: number;
+  isArchived: boolean;
+  color: string;
+  cardDayFin: string | null;
+  cardDayPay: string | null;
+  isTransExpense: boolean;
+  isCardAutoPay: boolean;
+  utime: number;
+};
+
+export type Currency = {
+  uid: string;
+  name: string;
+  iso: string;
+  mainIso: string;
+  symbol: string;
+  rate: number;
+  symbolPosition: "P" | "S";
+  isMainCurrency: boolean;
+  isShow: boolean;
+  decimalPoint: number;
+  isDel: boolean;
+  orderSeq: number;
+};
+
+export type BalanceAdjustment = {
+  assetUid: string;
   amount: number;
   note: string;
-  adjustedAt: string;
+  adjustedAt: number;
 };

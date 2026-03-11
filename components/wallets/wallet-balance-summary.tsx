@@ -1,27 +1,26 @@
 "use client";
 
 import { useMemo } from "react";
-import { Wallet, WalletCurrency } from "@/features/wallets/types/wallet";
-import { formatCurrency } from "@/features/wallets/utils/format-currency";
+import { Asset } from "@/features/wallets/types/wallet";
+import { formatCurrencyByIso } from "@/features/wallets/utils/format-currency";
 
 type WalletBalanceSummaryProps = {
-  wallets: Wallet[];
+  assets: Asset[];
+  getCurrencyIso: (currencyUid: string) => string;
 };
 
-export function WalletBalanceSummary({ wallets }: WalletBalanceSummaryProps) {
+export function WalletBalanceSummary({ assets, getCurrencyIso }: WalletBalanceSummaryProps) {
   const summaryByCurrency = useMemo(() => {
-    const groups = new Map<WalletCurrency, number>();
+    const groups = new Map<string, number>();
 
-    for (const wallet of wallets) {
-      const current = groups.get(wallet.currency) ?? 0;
-      groups.set(wallet.currency, current + wallet.balance);
+    for (const asset of assets) {
+      const iso = getCurrencyIso(asset.currencyUid);
+      const current = groups.get(iso) ?? 0;
+      groups.set(iso, current + asset.balance);
     }
 
-    return Array.from(groups.entries()).map(([currency, total]) => ({
-      currency,
-      total,
-    }));
-  }, [wallets]);
+    return Array.from(groups.entries()).map(([iso, total]) => ({ iso, total }));
+  }, [assets, getCurrencyIso]);
 
   const primarySummary = summaryByCurrency[0];
 
@@ -32,7 +31,7 @@ export function WalletBalanceSummary({ wallets }: WalletBalanceSummaryProps) {
           Total Balance
         </span>
         <p className="mt-1 text-2xl font-bold tracking-tight text-foreground">
-          {formatCurrency(0, "IDR")}
+          {formatCurrencyByIso(0, "IDR")}
         </p>
       </section>
     );
@@ -46,22 +45,22 @@ export function WalletBalanceSummary({ wallets }: WalletBalanceSummaryProps) {
         </span>
         {summaryByCurrency.length === 1 && (
           <span className="text-[10px] font-medium text-muted">
-            {primarySummary.currency}
+            {primarySummary.iso}
           </span>
         )}
       </div>
 
       <p className="mt-1 text-2xl font-bold tracking-tight text-foreground">
-        {formatCurrency(primarySummary.total, primarySummary.currency)}
+        {formatCurrencyByIso(primarySummary.total, primarySummary.iso)}
       </p>
 
       {summaryByCurrency.length > 1 && (
         <div className="mt-2 flex flex-wrap gap-3">
-          {summaryByCurrency.slice(1).map(({ currency, total }) => (
-            <div key={currency} className="text-[11px]">
-              <span className="text-muted-soft">{currency}: </span>
+          {summaryByCurrency.slice(1).map(({ iso, total }) => (
+            <div key={iso} className="text-[11px]">
+              <span className="text-muted-soft">{iso}: </span>
               <span className="font-medium text-foreground">
-                {formatCurrency(total, currency)}
+                {formatCurrencyByIso(total, iso)}
               </span>
             </div>
           ))}

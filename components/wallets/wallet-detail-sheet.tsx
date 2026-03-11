@@ -1,9 +1,9 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { Wallet, WalletBalanceAdjustment } from "@/features/wallets/types/wallet";
-import { WALLET_COLOR_MAP, WALLET_TYPE_LABELS } from "@/features/wallets/config/wallet-config";
-import { formatCurrency } from "@/features/wallets/utils/format-currency";
+import { Asset, BalanceAdjustment } from "@/features/wallets/types/wallet";
+import { ASSET_COLOR_MAP } from "@/features/wallets/config/wallet-config";
+import { formatCurrencyByIso } from "@/features/wallets/utils/format-currency";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -11,14 +11,16 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils/cn";
 
 type WalletDetailSheetProps = {
-  wallet: Wallet | null;
+  asset: Asset | null;
+  groupLabel: string;
+  currencyIso: string;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onEdit: (wallet: Wallet) => void;
-  onAdjustBalance: (adjustment: WalletBalanceAdjustment) => void;
-  onArchive: (wallet: Wallet) => void;
-  onRestore: (wallet: Wallet) => void;
-  onDelete: (wallet: Wallet) => void;
+  onEdit: (asset: Asset) => void;
+  onAdjustBalance: (adjustment: BalanceAdjustment) => void;
+  onArchive: (asset: Asset) => void;
+  onRestore: (asset: Asset) => void;
+  onDelete: (asset: Asset) => void;
 };
 
 type AdjustmentFormState = {
@@ -34,7 +36,9 @@ const DEFAULT_ADJUSTMENT: AdjustmentFormState = {
 };
 
 export function WalletDetailSheet({
-  wallet,
+  asset,
+  groupLabel,
+  currencyIso,
   isOpen,
   onOpenChange,
   onEdit,
@@ -46,45 +50,33 @@ export function WalletDetailSheet({
   const [showAdjust, setShowAdjust] = useState(false);
   const [adjustForm, setAdjustForm] = useState<AdjustmentFormState>(DEFAULT_ADJUSTMENT);
 
-  if (!wallet) {
-    return null;
-  }
+  if (!asset) return null;
 
-  const colors = WALLET_COLOR_MAP[wallet.color] ?? WALLET_COLOR_MAP.sky;
+  const colors = ASSET_COLOR_MAP[asset.color] ?? ASSET_COLOR_MAP.sky;
 
   function handleAdjustSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!wallet) {
-      return;
-    }
+    if (!asset) return;
 
     const rawAmount = Number(adjustForm.amount.replace(/[^0-9.-]/g, ""));
 
-    if (Number.isNaN(rawAmount) || rawAmount <= 0) {
-      return;
-    }
+    if (Number.isNaN(rawAmount) || rawAmount <= 0) return;
 
     const signedAmount = adjustForm.direction === "subtract" ? -rawAmount : rawAmount;
 
     onAdjustBalance({
-      walletId: wallet.id,
+      assetUid: asset.uid,
       amount: signedAmount,
       note: adjustForm.note.trim(),
-      adjustedAt: new Date().toISOString(),
+      adjustedAt: Date.now(),
     });
 
     setAdjustForm(DEFAULT_ADJUSTMENT);
     setShowAdjust(false);
   }
 
-  const createdDate = new Date(wallet.createdAt).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-
-  const updatedDate = new Date(wallet.updatedAt).toLocaleDateString("en-US", {
+  const updatedDate = new Date(asset.utime).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -103,12 +95,12 @@ export function WalletDetailSheet({
               colors.text,
             )}
           >
-            {wallet.name.slice(0, 2)}
+            {asset.name.slice(0, 2)}
           </div>
           <div className="flex flex-1 flex-col gap-0.5">
-            <h2 className="text-base font-semibold text-foreground">{wallet.name}</h2>
+            <h2 className="text-base font-semibold text-foreground">{asset.name}</h2>
             <span className="text-[11px] text-muted-soft">
-              {WALLET_TYPE_LABELS[wallet.type]} · {wallet.currency}
+              {groupLabel} · {currencyIso}
             </span>
           </div>
         </div>
@@ -118,22 +110,18 @@ export function WalletDetailSheet({
             Current Balance
           </span>
           <p className="mt-0.5 text-2xl font-bold tracking-tight text-foreground">
-            {formatCurrency(wallet.balance, wallet.currency)}
+            {formatCurrencyByIso(asset.balance, currencyIso)}
           </p>
         </div>
 
-        <div className="mb-5 grid grid-cols-2 gap-2 text-[11px]">
-          <div className="rounded-xl bg-background-soft px-3 py-2">
-            <span className="text-muted-soft">Created</span>
-            <p className="mt-0.5 font-medium text-foreground">{createdDate}</p>
-          </div>
+        <div className="mb-5 grid grid-cols-1 gap-2 text-[11px]">
           <div className="rounded-xl bg-background-soft px-3 py-2">
             <span className="text-muted-soft">Last updated</span>
             <p className="mt-0.5 font-medium text-foreground">{updatedDate}</p>
           </div>
         </div>
 
-        {wallet.isArchived && (
+        {asset.isArchived && (
           <div className="mb-4 rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-[11px] font-medium text-warning">
             This wallet is archived. Restore it to resume tracking.
           </div>
@@ -155,19 +143,19 @@ export function WalletDetailSheet({
               className="h-9"
               onClick={() => {
                 onOpenChange(false);
-                onEdit(wallet);
+                onEdit(asset);
               }}
             >
               Edit wallet
             </Button>
             <div className="grid grid-cols-2 gap-2">
-              {wallet.isArchived ? (
+              {asset.isArchived ? (
                 <Button
                   type="button"
                   variant="outline"
                   className="h-9 text-success"
                   onClick={() => {
-                    onRestore(wallet);
+                    onRestore(asset);
                     onOpenChange(false);
                   }}
                 >
@@ -179,7 +167,7 @@ export function WalletDetailSheet({
                   variant="outline"
                   className="h-9 text-warning"
                   onClick={() => {
-                    onArchive(wallet);
+                    onArchive(asset);
                     onOpenChange(false);
                   }}
                 >
@@ -192,7 +180,7 @@ export function WalletDetailSheet({
                 className="h-9 text-danger"
                 onClick={() => {
                   onOpenChange(false);
-                  onDelete(wallet);
+                  onDelete(asset);
                 }}
               >
                 Delete
@@ -210,7 +198,7 @@ export function WalletDetailSheet({
               <button
                 type="button"
                 onClick={() =>
-                  setAdjustForm((previous) => ({ ...previous, direction: "add" }))
+                  setAdjustForm((prev) => ({ ...prev, direction: "add" }))
                 }
                 className={cn(
                   "rounded-xl px-3 py-2 text-center text-[11px] font-medium transition",
@@ -224,7 +212,7 @@ export function WalletDetailSheet({
               <button
                 type="button"
                 onClick={() =>
-                  setAdjustForm((previous) => ({ ...previous, direction: "subtract" }))
+                  setAdjustForm((prev) => ({ ...prev, direction: "subtract" }))
                 }
                 className={cn(
                   "rounded-xl px-3 py-2 text-center text-[11px] font-medium transition",
@@ -245,7 +233,7 @@ export function WalletDetailSheet({
                 inputMode="numeric"
                 value={adjustForm.amount}
                 onChange={(event) =>
-                  setAdjustForm((previous) => ({ ...previous, amount: event.target.value }))
+                  setAdjustForm((prev) => ({ ...prev, amount: event.target.value }))
                 }
                 placeholder="0"
               />
@@ -258,7 +246,7 @@ export function WalletDetailSheet({
                 type="text"
                 value={adjustForm.note}
                 onChange={(event) =>
-                  setAdjustForm((previous) => ({ ...previous, note: event.target.value }))
+                  setAdjustForm((prev) => ({ ...prev, note: event.target.value }))
                 }
                 placeholder="e.g. Correction, top-up"
               />

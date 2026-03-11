@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { Transaction } from "@/features/transactions/types/transaction";
-import { formatCurrency } from "@/features/wallets/utils/format-currency";
+import { DisplayTransaction } from "@/features/transactions/hooks/use-transactions";
+import { formatCurrencyByIso } from "@/features/wallets/utils/format-currency";
 
 type TransactionSummaryProps = {
-  transactions: Transaction[];
+  transactions: DisplayTransaction[];
 };
 
 export function TransactionSummary({ transactions }: TransactionSummaryProps) {
@@ -14,12 +14,12 @@ export function TransactionSummary({ transactions }: TransactionSummaryProps) {
     let totalExpense = 0;
 
     for (const txn of transactions) {
-      if (txn.kind === "income") {
-        totalIncome += txn.amount;
+      if (txn.doType === 2) {
+        totalIncome += txn.money;
       }
 
-      if (txn.kind === "expense") {
-        totalExpense += txn.amount;
+      if (txn.doType === 1) {
+        totalExpense += txn.money;
       }
     }
 
@@ -37,7 +37,7 @@ export function TransactionSummary({ transactions }: TransactionSummaryProps) {
           Income
         </span>
         <p className="mt-0.5 text-sm font-semibold text-success">
-          {formatCurrency(income, "IDR")}
+          {formatCurrencyByIso(income, "IDR")}
         </p>
       </div>
 
@@ -46,7 +46,7 @@ export function TransactionSummary({ transactions }: TransactionSummaryProps) {
           Expense
         </span>
         <p className="mt-0.5 text-sm font-semibold text-danger">
-          {formatCurrency(expense, "IDR")}
+          {formatCurrencyByIso(expense, "IDR")}
         </p>
       </div>
 
@@ -60,7 +60,7 @@ export function TransactionSummary({ transactions }: TransactionSummaryProps) {
           }`}
         >
           {net >= 0 ? "+" : "-"}
-          {formatCurrency(Math.abs(net), "IDR")}
+          {formatCurrencyByIso(Math.abs(net), "IDR")}
         </p>
       </div>
     </div>

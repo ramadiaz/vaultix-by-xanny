@@ -1,23 +1,32 @@
-import { storeWallets } from "@/features/wallets/services/wallet-storage.service";
-import { storeTransactions } from "@/features/transactions/services/transaction-storage.service";
-import { storeCustomCategories } from "@/features/transactions/services/category-storage.service";
+import { storeAssets, storeAssetGroups, storeCurrencies } from "@/features/wallets/services/wallet-storage.service";
+import { storeTransactions, storeTags, storeTxTags } from "@/features/transactions/services/transaction-storage.service";
+import { storeCategories } from "@/features/transactions/services/category-storage.service";
 import { VaultixExportData } from "../types/import-export";
-import { Wallet } from "@/features/wallets/types/wallet";
-import { Transaction, CustomCategory } from "@/features/transactions/types/transaction";
+import { Asset } from "@/features/wallets/types/wallet";
+import { Transaction, Category } from "@/features/transactions/types/transaction";
+import { MmbakImportResult } from "./mmbak-import.service";
 
 type ImportMode = "replace" | "merge";
 
 type VaultixImportResult = {
-  wallets: Wallet[];
+  assets: Asset[];
   transactions: Transaction[];
-  customCategories: CustomCategory[];
+  categories: Category[];
 };
 
 export function parseVaultixJson(jsonString: string): VaultixExportData {
   const data = JSON.parse(jsonString);
 
-  if (!data.version || !data.wallets || !data.transactions) {
+  if (!data.version || (!data.assets && !data.wallets) || !data.transactions) {
     throw new Error("Invalid Vaultix backup file");
+  }
+
+  if (data.wallets && !data.assets) {
+    data.assets = data.wallets;
+  }
+
+  if (data.customCategories && !data.categories) {
+    data.categories = data.customCategories;
   }
 
   return data as VaultixExportData;
@@ -26,80 +35,135 @@ export function parseVaultixJson(jsonString: string): VaultixExportData {
 export function applyVaultixImport(
   data: VaultixExportData,
   mode: ImportMode,
-  existingWallets: Wallet[],
+  existingAssets: Asset[],
   existingTransactions: Transaction[],
-  existingCustomCategories: CustomCategory[],
+  existingCategories: Category[],
 ): VaultixImportResult {
   if (mode === "replace") {
-    storeWallets(data.wallets);
+    storeAssets(data.assets);
     storeTransactions(data.transactions);
-    storeCustomCategories(data.customCategories ?? []);
+    storeCategories(data.categories ?? []);
+
+    if (data.assetGroups) storeAssetGroups(data.assetGroups);
+    if (data.currencies) storeCurrencies(data.currencies);
 
     return {
-      wallets: data.wallets,
+      assets: data.assets,
       transactions: data.transactions,
-      customCategories: data.customCategories ?? [],
+      categories: data.categories ?? [],
     };
   }
 
-  const walletIdSet = new Set(existingWallets.map((w) => w.id));
-  const newWallets = data.wallets.filter((w) => !walletIdSet.has(w.id));
-  const mergedWallets = [...existingWallets, ...newWallets];
+  const assetUidSet = new Set(existingAssets.map((a) => a.uid));
+  const newAssets = data.assets.filter((a) => !assetUidSet.has(a.uid));
+  const mergedAssets = [...existingAssets, ...newAssets];
 
-  const txnIdSet = new Set(existingTransactions.map((t) => t.id));
-  const newTransactions = data.transactions.filter((t) => !txnIdSet.has(t.id));
+  const txnUidSet = new Set(existingTransactions.map((t) => t.uid));
+  const newTransactions = data.transactions.filter((t) => !txnUidSet.has(t.uid));
   const mergedTransactions = [...existingTransactions, ...newTransactions];
 
-  const catIdSet = new Set(existingCustomCategories.map((c) => c.id));
-  const incoming = data.customCategories ?? [];
-  const newCategories = incoming.filter((c) => !catIdSet.has(c.id));
-  const mergedCategories = [...existingCustomCategories, ...newCategories];
+  const catUidSet = new Set(existingCategories.map((c) => c.uid));
+  const incoming = data.categories ?? [];
+  const newCategories = incoming.filter((c) => !catUidSet.has(c.uid));
+  const mergedCategories = [...existingCategories, ...newCategories];
 
-  storeWallets(mergedWallets);
+  storeAssets(mergedAssets);
   storeTransactions(mergedTransactions);
-  storeCustomCategories(mergedCategories);
+  storeCategories(mergedCategories);
 
   return {
-    wallets: mergedWallets,
+    assets: mergedAssets,
     transactions: mergedTransactions,
-    customCategories: mergedCategories,
+    categories: mergedCategories,
   };
 }
 
 export function applyMoneyManagerImport(
-  wallets: Wallet[],
+  assets: Asset[],
   transactions: Transaction[],
-  customCategories: CustomCategory[],
+  categories: Category[],
   mode: ImportMode,
-  existingWallets: Wallet[],
+  existingAssets: Asset[],
   existingTransactions: Transaction[],
-  existingCustomCategories: CustomCategory[],
+  existingCategories: Category[],
 ): VaultixImportResult {
   if (mode === "replace") {
-    storeWallets(wallets);
+    storeAssets(assets);
     storeTransactions(transactions);
-    storeCustomCategories(customCategories);
+    storeCategories(categories);
 
-    return { wallets, transactions, customCategories };
+    return { assets, transactions, categories };
   }
 
-  const walletIdSet = new Set(existingWallets.map((w) => w.id));
-  const newWallets = wallets.filter((w) => !walletIdSet.has(w.id));
-  const mergedWallets = [...existingWallets, ...newWallets];
+  const exAssetSet = new Set(existingAssets.map((a) => a.uid));
+  const mmNewAssets = assets.filter((a) => !exAssetSet.has(a.uid));
+  const mmMergedAssets = [...existingAssets, ...mmNewAssets];
 
-  const mergedTransactions = [...existingTransactions, ...transactions];
+  const mmMergedTxns = [...existingTransactions, ...transactions];
 
-  const catIdSet = new Set(existingCustomCategories.map((c) => c.id));
-  const newCategories = customCategories.filter((c) => !catIdSet.has(c.id));
-  const mergedCategories = [...existingCustomCategories, ...newCategories];
+  const exCatSet = new Set(existingCategories.map((c) => c.uid));
+  const mmNewCats = categories.filter((c) => !exCatSet.has(c.uid));
+  const mmMergedCats = [...existingCategories, ...mmNewCats];
 
-  storeWallets(mergedWallets);
-  storeTransactions(mergedTransactions);
-  storeCustomCategories(mergedCategories);
+  storeAssets(mmMergedAssets);
+  storeTransactions(mmMergedTxns);
+  storeCategories(mmMergedCats);
 
   return {
-    wallets: mergedWallets,
-    transactions: mergedTransactions,
-    customCategories: mergedCategories,
+    assets: mmMergedAssets,
+    transactions: mmMergedTxns,
+    categories: mmMergedCats,
+  };
+}
+
+export function applyMmbakImport(
+  data: MmbakImportResult,
+  mode: ImportMode,
+  existingAssets: Asset[],
+  existingTransactions: Transaction[],
+  existingCategories: Category[],
+): VaultixImportResult {
+  if (mode === "replace") {
+    storeAssets(data.assets);
+    storeTransactions(data.transactions);
+    storeCategories(data.categories);
+
+    if (data.assetGroups.length > 0) storeAssetGroups(data.assetGroups);
+    if (data.currencies.length > 0) storeCurrencies(data.currencies);
+    if (data.tags.length > 0) storeTags(data.tags);
+    if (data.txTags.length > 0) storeTxTags(data.txTags);
+
+    return {
+      assets: data.assets,
+      transactions: data.transactions,
+      categories: data.categories,
+    };
+  }
+
+  const bakAssetSet = new Set(existingAssets.map((a) => a.uid));
+  const bakNewAssets = data.assets.filter((a) => !bakAssetSet.has(a.uid));
+  const bakMergedAssets = [...existingAssets, ...bakNewAssets];
+
+  const bakTxnSet = new Set(existingTransactions.map((t) => t.uid));
+  const bakNewTxns = data.transactions.filter((t) => !bakTxnSet.has(t.uid));
+  const bakMergedTxns = [...existingTransactions, ...bakNewTxns];
+
+  const bakCatSet = new Set(existingCategories.map((c) => c.uid));
+  const bakNewCats = data.categories.filter((c) => !bakCatSet.has(c.uid));
+  const bakMergedCats = [...existingCategories, ...bakNewCats];
+
+  storeAssets(bakMergedAssets);
+  storeTransactions(bakMergedTxns);
+  storeCategories(bakMergedCats);
+
+  if (data.assetGroups.length > 0) storeAssetGroups(data.assetGroups);
+  if (data.currencies.length > 0) storeCurrencies(data.currencies);
+  if (data.tags.length > 0) storeTags(data.tags);
+  if (data.txTags.length > 0) storeTxTags(data.txTags);
+
+  return {
+    assets: bakMergedAssets,
+    transactions: bakMergedTxns,
+    categories: bakMergedCats,
   };
 }

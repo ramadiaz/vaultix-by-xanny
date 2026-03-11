@@ -1,17 +1,19 @@
-import { getStoredWallets } from "@/features/wallets/services/wallet-storage.service";
+import { getStoredAssets, getStoredAssetGroups, getStoredCurrencies } from "@/features/wallets/services/wallet-storage.service";
 import { getStoredTransactions } from "@/features/transactions/services/transaction-storage.service";
-import { getStoredCustomCategories } from "@/features/transactions/services/category-storage.service";
+import { getStoredCategories } from "@/features/transactions/services/category-storage.service";
 import { VaultixExportData } from "../types/import-export";
 
-const EXPORT_VERSION = 1;
+const EXPORT_VERSION = 2;
 
 export function buildExportData(): VaultixExportData {
   return {
     version: EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
-    wallets: getStoredWallets(),
+    assets: getStoredAssets(),
+    assetGroups: getStoredAssetGroups(),
+    currencies: getStoredCurrencies(),
     transactions: getStoredTransactions(),
-    customCategories: getStoredCustomCategories(),
+    categories: getStoredCategories(),
   };
 }
 

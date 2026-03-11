@@ -1,44 +1,56 @@
-export type TransactionKind = "income" | "expense" | "transfer";
+export type CategoryType = 0 | 1;
 
-export type TransactionCategory =
-  | "salary"
-  | "freelance"
-  | "investment_return"
-  | "gift_received"
-  | "food"
-  | "transport"
-  | "shopping"
-  | "entertainment"
-  | "bills"
-  | "health"
-  | "education"
-  | "travel"
-  | "subscription"
-  | "rent"
-  | "insurance"
-  | "gift_sent"
-  | "transfer"
-  | "other"
-  | string;
+export type CategoryStatus = 0 | 2;
 
-export type Transaction = {
-  id: string;
-  walletId: string;
-  targetWalletId: string | null;
-  kind: TransactionKind;
-  category: TransactionCategory;
-  amount: number;
-  fee: number;
-  description: string;
-  note: string;
-  occurredAt: string;
-  createdAt: string;
-  updatedAt: string;
+export type Category = {
+  uid: string;
+  name: string;
+  type: CategoryType;
+  status: CategoryStatus;
+  pUid: string | null;
+  orderSeq: number;
+  isDel: boolean;
+  utime: number;
 };
 
-export type CustomCategory = {
-  id: string;
+export type DoType = 0 | 1 | 2 | 3 | 4;
+
+export type Transaction = {
+  uid: string;
+  assetUid: string;
+  ctgUid: string | null;
+  toAssetUid: string | null;
+  content: string;
+  date: number;
+  writeDate: string | null;
+  doType: DoType;
+  money: number;
+  inMoney: number;
+  txUidTrans: string | null;
+  txUidFee: string | null;
+  isDel: boolean;
+  utime: number;
+  currencyUid: string;
+  amountAccount: number;
+  mark: number;
+  paid: string | null;
+  lat: string | null;
+  lng: string | null;
+};
+
+export type Tag = {
+  uid: string;
   name: string;
-  icon: string;
-  kind: "income" | "expense";
+  orderSeq: number;
+  isDel: boolean;
+  utime: number;
+};
+
+export type TxTag = {
+  uid: string;
+  txUid: string;
+  tagUid: string;
+  orderSeq: number;
+  isDel: boolean;
+  utime: number;
 };

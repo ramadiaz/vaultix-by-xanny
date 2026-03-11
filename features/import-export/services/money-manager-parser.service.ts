@@ -1,77 +1,27 @@
 import * as XLSX from "xlsx";
-import { Transaction, TransactionCategory, TransactionKind, CustomCategory } from "@/features/transactions/types/transaction";
-import { Wallet, WalletColor } from "@/features/wallets/types/wallet";
-import { BUILTIN_CATEGORY_LABELS } from "@/features/transactions/config/transaction-config";
+import { Transaction, Category, DoType } from "@/features/transactions/types/transaction";
+import { Asset } from "@/features/wallets/types/wallet";
+import { ALL_DEFAULT_CATEGORIES } from "@/features/transactions/config/transaction-config";
 import { ImportResult, MoneyManagerRow } from "../types/import-export";
 
-const CATEGORY_MAPPING: Record<string, TransactionCategory> = {
-  "🍜 food": "food",
-  "🚖 transport": "transport",
-  "🧑‍🎤 entertainment": "entertainment",
-  "💰 salary": "salary",
-  "🧘🏼 health": "health",
-  "📙 education": "education",
-  "🧥 apparel": "shopping",
-  "💄 beauty": "shopping",
-  "☕ coffee": "food",
-  "🌐 intermet": "subscription",
-  "☁️ cloud": "subscription",
-  "🧑‍🤝‍🧑 family": "gift_sent",
-  "👬🏻 social life": "entertainment",
-  "🎱 sports": "entertainment",
-  "👷 productivity": "bills",
-  "💵 petty cash": "other",
-  "other": "other",
-  "modified bal.": "other",
-};
-
-const WALLET_COLORS: WalletColor[] = ["sky", "emerald", "violet", "rose", "amber", "slate"];
+const ASSET_COLORS: string[] = ["sky", "emerald", "violet", "rose", "amber", "slate"];
 
 function normalizeCategory(raw: string): string {
   return raw.trim().toLowerCase();
 }
 
-function mapCategory(
-  rawCategory: string,
-  kind: TransactionKind,
-): TransactionCategory {
+function findMatchingCategory(rawCategory: string): Category | undefined {
   const normalized = normalizeCategory(rawCategory);
-  const mapped = CATEGORY_MAPPING[normalized];
-
-  if (mapped) {
-    return mapped;
-  }
-
-  if (kind === "transfer") {
-    return "transfer";
-  }
-
-  return "other";
-}
-
-function shouldCreateCustomCategory(rawCategory: string): boolean {
-  const normalized = normalizeCategory(rawCategory);
-
-  if (CATEGORY_MAPPING[normalized]) {
-    return false;
-  }
-
-  const builtinValues = Object.values(BUILTIN_CATEGORY_LABELS).map((v) =>
-    v.toLowerCase(),
+  return ALL_DEFAULT_CATEGORIES.find(
+    (c) => c.name.toLowerCase() === normalized,
   );
-
-  if (builtinValues.includes(normalized)) {
-    return false;
-  }
-
-  return true;
 }
 
-function parseMoneyManagerDate(raw: string): string {
+function parseMoneyManagerDate(raw: string): number {
   const parts = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/);
 
   if (!parts) {
-    return new Date().toISOString();
+    return Date.now();
   }
 
   const [, month, day, year, hour, minute, second] = parts;
@@ -82,7 +32,7 @@ function parseMoneyManagerDate(raw: string): string {
     Number(hour),
     Number(minute),
     Number(second),
-  ).toISOString();
+  ).getTime();
 }
 
 function parseRows(sheetData: unknown[][]): MoneyManagerRow[] {
@@ -91,9 +41,7 @@ function parseRows(sheetData: unknown[][]): MoneyManagerRow[] {
   for (let i = 1; i < sheetData.length; i++) {
     const row = sheetData[i];
 
-    if (!row || row.length < 7) {
-      continue;
-    }
+    if (!row || row.length < 7) continue;
 
     rows.push({
       date: String(row[0] ?? ""),
@@ -112,6 +60,10 @@ function parseRows(sheetData: unknown[][]): MoneyManagerRow[] {
   return rows;
 }
 
+function generateUid(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export function parseMoneyManagerExcel(fileBuffer: ArrayBuffer): ImportResult {
   const workbook = XLSX.read(fileBuffer, { type: "array" });
   const sheetName = workbook.SheetNames[0];
@@ -120,34 +72,38 @@ export function parseMoneyManagerExcel(fileBuffer: ArrayBuffer): ImportResult {
   const rows = parseRows(rawData);
 
   const accountSet = new Set<string>();
-  const customCategoryMap = new Map<string, CustomCategory>();
+  const customCategoryMap = new Map<string, Category>();
   let skippedTransferIn = 0;
 
   for (const row of rows) {
     accountSet.add(row.account);
   }
 
-  const walletMap = new Map<string, Wallet>();
+  const assetMap = new Map<string, Asset>();
   let colorIndex = 0;
+  let orderSeq = 1;
 
   for (const accountName of accountSet) {
-    const walletId = `wallet_import_${accountName.toLowerCase().replace(/\s+/g, "_")}`;
-    walletMap.set(accountName, {
-      id: walletId,
+    const uid = `import_${accountName.toLowerCase().replace(/\s+/g, "_")}`;
+    assetMap.set(accountName, {
+      uid,
       name: accountName,
-      type: "bank",
-      currency: "IDR",
-      color: WALLET_COLORS[colorIndex % WALLET_COLORS.length],
+      groupUid: "1",
+      currencyUid: "IDR_IDR",
+      orderSeq: orderSeq++,
       balance: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
       isArchived: false,
+      color: ASSET_COLORS[colorIndex % ASSET_COLORS.length],
+      cardDayFin: null,
+      cardDayPay: null,
+      isTransExpense: false,
+      isCardAutoPay: false,
+      utime: Date.now(),
     });
     colorIndex++;
   }
 
   const transactions: Transaction[] = [];
-
   const transferOutRows = rows.filter((r) => r.type === "Transfer-Out");
 
   for (const row of rows) {
@@ -156,18 +112,15 @@ export function parseMoneyManagerExcel(fileBuffer: ArrayBuffer): ImportResult {
       continue;
     }
 
-    const wallet = walletMap.get(row.account);
+    const asset = assetMap.get(row.account);
+    if (!asset) continue;
 
-    if (!wallet) {
-      continue;
-    }
-
-    const occurredAt = parseMoneyManagerDate(row.date);
-    const now = new Date().toISOString();
+    const dateMs = parseMoneyManagerDate(row.date);
+    const now = Date.now();
 
     if (row.type === "Transfer-Out") {
-      const targetWallet = walletMap.get(row.category);
-      const targetWalletId = targetWallet?.id ?? null;
+      const targetAsset = assetMap.get(row.category);
+      const toAssetUid = targetAsset?.uid ?? null;
 
       let fee = 0;
       const feeRow = rows.find(
@@ -175,8 +128,6 @@ export function parseMoneyManagerExcel(fileBuffer: ArrayBuffer): ImportResult {
           r.type === "Expense" &&
           r.date === row.date &&
           r.account === row.account &&
-          (r.note.toLowerCase().includes("fee") ||
-            r.category.toLowerCase() === "other") &&
           r.note.toLowerCase().includes("fee"),
       );
 
@@ -184,56 +135,93 @@ export function parseMoneyManagerExcel(fileBuffer: ArrayBuffer): ImportResult {
         fee = feeRow.amountIDR;
       }
 
-      const txn: Transaction = {
-        id: `txn_import_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        walletId: wallet.id,
-        targetWalletId: targetWalletId,
-        kind: "transfer",
-        category: "transfer",
-        amount: row.amountIDR,
-        fee,
-        description: row.note || `Transfer to ${row.category}`,
-        note: row.description || "",
-        occurredAt,
-        createdAt: now,
-        updatedAt: now,
+      const transLinkUid = generateUid();
+      const txOutUid = generateUid();
+
+      const txOut: Transaction = {
+        uid: txOutUid,
+        assetUid: asset.uid,
+        ctgUid: null,
+        toAssetUid: toAssetUid,
+        content: row.note || `Transfer to ${row.category}`,
+        date: dateMs,
+        writeDate: null,
+        doType: 3,
+        money: row.amountIDR,
+        inMoney: row.amountIDR,
+        txUidTrans: transLinkUid,
+        txUidFee: null,
+        isDel: false,
+        utime: now,
+        currencyUid: "IDR_IDR",
+        amountAccount: row.amountIDR,
+        mark: 0,
+        paid: null,
+        lat: null,
+        lng: null,
       };
 
-      if (targetWallet) {
-        wallet.balance -= row.amountIDR + fee;
-        targetWallet.balance += row.amountIDR;
+      const txIn: Transaction = {
+        uid: transLinkUid,
+        assetUid: toAssetUid ?? asset.uid,
+        ctgUid: null,
+        toAssetUid: asset.uid,
+        content: row.note || `Transfer from ${row.account}`,
+        date: dateMs,
+        writeDate: null,
+        doType: 4,
+        money: row.amountIDR,
+        inMoney: row.amountIDR,
+        txUidTrans: txOutUid,
+        txUidFee: null,
+        isDel: false,
+        utime: now,
+        currencyUid: "IDR_IDR",
+        amountAccount: row.amountIDR,
+        mark: 0,
+        paid: null,
+        lat: null,
+        lng: null,
+      };
+
+      if (fee > 0) {
+        const feeUid = generateUid();
+        const txFee: Transaction = {
+          uid: feeUid,
+          assetUid: asset.uid,
+          ctgUid: null,
+          toAssetUid: null,
+          content: "Transfer fee",
+          date: dateMs,
+          writeDate: null,
+          doType: 1,
+          money: fee,
+          inMoney: fee,
+          txUidTrans: null,
+          txUidFee: null,
+          isDel: false,
+          utime: now,
+          currencyUid: "IDR_IDR",
+          amountAccount: fee,
+          mark: 0,
+          paid: null,
+          lat: null,
+          lng: null,
+        };
+
+        txOut.txUidFee = feeUid;
+        txIn.txUidFee = feeUid;
+        transactions.push(txFee);
+        asset.balance -= fee;
       }
 
-      transactions.push(txn);
+      asset.balance -= row.amountIDR;
+      if (targetAsset) {
+        targetAsset.balance += row.amountIDR;
+      }
+
+      transactions.push(txOut, txIn);
       continue;
-    }
-
-    const kind: TransactionKind = row.type === "Income" ? "income" : "expense";
-    const category = mapCategory(row.category, kind);
-
-    if (
-      shouldCreateCustomCategory(row.category) &&
-      kind !== "transfer"
-    ) {
-      const customId = `custom_import_${normalizeCategory(row.category).replace(/\s+/g, "_")}`;
-
-      if (!customCategoryMap.has(customId)) {
-        const iconMatch = row.category.match(
-          /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/u,
-        );
-        const icon = iconMatch ? iconMatch[0] : "📌";
-        const name = row.category.replace(
-          /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu,
-          "",
-        ).trim() || row.category;
-
-        customCategoryMap.set(customId, {
-          id: customId,
-          name,
-          icon,
-          kind: kind === "income" ? "income" : "expense",
-        });
-      }
     }
 
     const isFeeRow =
@@ -243,50 +231,83 @@ export function parseMoneyManagerExcel(fileBuffer: ArrayBuffer): ImportResult {
         (t) => t.date === row.date && t.account === row.account,
       );
 
-    if (isFeeRow) {
-      continue;
+    if (isFeeRow) continue;
+
+    const doType: DoType = row.type === "Income" ? 2 : 1;
+
+    const matchedCategory = findMatchingCategory(row.category);
+    let ctgUid: string | null = null;
+
+    if (matchedCategory) {
+      ctgUid = matchedCategory.uid;
+    } else {
+      const customId = `cat_import_${normalizeCategory(row.category).replace(/\s+/g, "_")}`;
+
+      if (!customCategoryMap.has(customId)) {
+        const iconMatch = row.category.match(
+          /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/u,
+        );
+        const icon = iconMatch ? iconMatch[0] : "📌";
+        const name = row.category.trim() || "Other";
+
+        customCategoryMap.set(customId, {
+          uid: customId,
+          name: `${icon} ${name.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, "").trim() || name}`,
+          type: doType === 2 ? 0 : 1,
+          status: 0,
+          pUid: null,
+          orderSeq: 99,
+          isDel: false,
+          utime: now,
+        });
+      }
+
+      ctgUid = customId;
     }
 
-    const resolvedCategory =
-      shouldCreateCustomCategory(row.category) && kind !== "transfer"
-        ? `custom_import_${normalizeCategory(row.category).replace(/\s+/g, "_")}`
-        : category;
-
     const txn: Transaction = {
-      id: `txn_import_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      walletId: wallet.id,
-      targetWalletId: null,
-      kind,
-      category: resolvedCategory,
-      amount: row.amountIDR,
-      fee: 0,
-      description: row.note || row.category,
-      note: row.description || "",
-      occurredAt,
-      createdAt: now,
-      updatedAt: now,
+      uid: generateUid(),
+      assetUid: asset.uid,
+      ctgUid,
+      toAssetUid: null,
+      content: row.note || row.category,
+      date: dateMs,
+      writeDate: null,
+      doType,
+      money: row.amountIDR,
+      inMoney: row.amountIDR,
+      txUidTrans: null,
+      txUidFee: null,
+      isDel: false,
+      utime: now,
+      currencyUid: "IDR_IDR",
+      amountAccount: row.amountIDR,
+      mark: 0,
+      paid: null,
+      lat: null,
+      lng: null,
     };
 
-    if (kind === "income") {
-      wallet.balance += row.amountIDR;
+    if (doType === 2) {
+      asset.balance += row.amountIDR;
     } else {
-      wallet.balance -= row.amountIDR;
+      asset.balance -= row.amountIDR;
     }
 
     transactions.push(txn);
   }
 
-  const wallets = Array.from(walletMap.values());
-  const customCategories = Array.from(customCategoryMap.values());
+  const assets = Array.from(assetMap.values());
+  const allCategories = [...ALL_DEFAULT_CATEGORIES, ...Array.from(customCategoryMap.values())];
 
   return {
-    wallets,
+    assets,
     transactions,
-    customCategories,
+    categories: allCategories,
     summary: {
-      totalWallets: wallets.length,
+      totalAssets: assets.length,
       totalTransactions: transactions.length,
-      totalCustomCategories: customCategories.length,
+      totalCategories: customCategoryMap.size,
       skippedTransferIn,
     },
   };

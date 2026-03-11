@@ -1,35 +1,39 @@
 "use client";
 
 import { useState } from "react";
-import { Wallet } from "@/features/wallets/types/wallet";
+import { Asset } from "@/features/wallets/types/wallet";
 import { WalletCard } from "./wallet-card";
 import { cn } from "@/lib/utils/cn";
 
 type WalletListTab = "active" | "archived";
 
 type WalletListProps = {
-  activeWallets: Wallet[];
-  archivedWallets: Wallet[];
-  onTapWallet: (wallet: Wallet) => void;
-  onEditWallet: (wallet: Wallet) => void;
-  onArchiveWallet: (wallet: Wallet) => void;
-  onRestoreWallet: (wallet: Wallet) => void;
-  onDeleteWallet: (wallet: Wallet) => void;
+  activeAssets: Asset[];
+  archivedAssets: Asset[];
+  getGroupLabel: (groupUid: string) => string;
+  getCurrencyIso: (currencyUid: string) => string;
+  onTapAsset: (asset: Asset) => void;
+  onEditAsset: (asset: Asset) => void;
+  onArchiveAsset: (asset: Asset) => void;
+  onRestoreAsset: (asset: Asset) => void;
+  onDeleteAsset: (asset: Asset) => void;
 };
 
 export function WalletList({
-  activeWallets,
-  archivedWallets,
-  onTapWallet,
-  onEditWallet,
-  onArchiveWallet,
-  onRestoreWallet,
-  onDeleteWallet,
+  activeAssets,
+  archivedAssets,
+  getGroupLabel,
+  getCurrencyIso,
+  onTapAsset,
+  onEditAsset,
+  onArchiveAsset,
+  onRestoreAsset,
+  onDeleteAsset,
 }: WalletListProps) {
   const [tab, setTab] = useState<WalletListTab>("active");
 
-  const hasArchived = archivedWallets.length > 0;
-  const wallets = tab === "active" ? activeWallets : archivedWallets;
+  const hasArchived = archivedAssets.length > 0;
+  const assets = tab === "active" ? activeAssets : archivedAssets;
 
   return (
     <section className="flex flex-col gap-3">
@@ -45,7 +49,7 @@ export function WalletList({
                 : "text-muted hover:text-foreground",
             )}
           >
-            Active ({activeWallets.length})
+            Active ({activeAssets.length})
           </button>
           {hasArchived && (
             <button
@@ -58,13 +62,13 @@ export function WalletList({
                   : "text-muted hover:text-foreground",
               )}
             >
-              Archived ({archivedWallets.length})
+              Archived ({archivedAssets.length})
             </button>
           )}
         </div>
       </div>
 
-      {wallets.length === 0 ? (
+      {assets.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border-subtle bg-background/60 px-4 py-8 text-center text-xs backdrop-blur-md">
           <p className="font-medium text-foreground">
             {tab === "active" ? "No wallets yet" : "No archived wallets"}
@@ -77,15 +81,17 @@ export function WalletList({
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {wallets.map((wallet) => (
+          {assets.map((asset) => (
             <WalletCard
-              key={wallet.id}
-              wallet={wallet}
-              onTap={onTapWallet}
-              onEdit={onEditWallet}
-              onArchive={onArchiveWallet}
-              onRestore={onRestoreWallet}
-              onDelete={onDeleteWallet}
+              key={asset.uid}
+              asset={asset}
+              groupLabel={getGroupLabel(asset.groupUid)}
+              currencyIso={getCurrencyIso(asset.currencyUid)}
+              onTap={onTapAsset}
+              onEdit={onEditAsset}
+              onArchive={onArchiveAsset}
+              onRestore={onRestoreAsset}
+              onDelete={onDeleteAsset}
             />
           ))}
         </div>

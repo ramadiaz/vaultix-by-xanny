@@ -1,179 +1,191 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Wallet, WalletBalanceAdjustment } from "../types/wallet";
-import { getStoredWallets, storeWallets } from "../services/wallet-storage.service";
+import { Asset, AssetGroup, BalanceAdjustment, Currency } from "../types/wallet";
+import {
+  getStoredAssets,
+  storeAssets,
+  getStoredAssetGroups,
+  getStoredCurrencies,
+} from "../services/wallet-storage.service";
+import { ASSET_GROUP_LABELS } from "../config/wallet-config";
+import { AssetGroupType } from "../types/wallet";
 
 type UseWalletsState = {
-  wallets: Wallet[];
+  assets: Asset[];
+  assetGroups: AssetGroup[];
+  currencies: Currency[];
   isLoading: boolean;
 };
 
 type UseWalletsValue = UseWalletsState & {
-  activeWallets: Wallet[];
-  archivedWallets: Wallet[];
-  getWalletById: (id: string) => Wallet | undefined;
-  addWallet: (wallet: Wallet) => void;
-  updateWallet: (walletId: string, updates: Partial<Omit<Wallet, "id" | "createdAt">>) => void;
-  deleteWallet: (walletId: string) => void;
-  archiveWallet: (walletId: string) => void;
-  restoreWallet: (walletId: string) => void;
-  adjustBalance: (adjustment: WalletBalanceAdjustment) => void;
-  reorderWallets: (orderedIds: string[]) => void;
-  updateWalletBalance: (walletId: string, delta: number) => void;
+  activeAssets: Asset[];
+  archivedAssets: Asset[];
+  getAssetByUid: (uid: string) => Asset | undefined;
+  getCurrencyByUid: (uid: string) => Currency | undefined;
+  getGroupLabel: (groupUid: string) => string;
+  getCurrencyIso: (currencyUid: string) => string;
+  addAsset: (asset: Asset) => void;
+  updateAsset: (assetUid: string, updates: Partial<Omit<Asset, "uid">>) => void;
+  deleteAsset: (assetUid: string) => void;
+  archiveAsset: (assetUid: string) => void;
+  restoreAsset: (assetUid: string) => void;
+  adjustBalance: (adjustment: BalanceAdjustment) => void;
+  reorderAssets: (orderedUids: string[]) => void;
+  updateAssetBalance: (assetUid: string, delta: number) => void;
 };
 
 export function useWallets(): UseWalletsValue {
   const [state, setState] = useState<UseWalletsState>({
-    wallets: [],
+    assets: [],
+    assetGroups: [],
+    currencies: [],
     isLoading: true,
   });
 
   useEffect(() => {
     setState({
-      wallets: getStoredWallets(),
+      assets: getStoredAssets(),
+      assetGroups: getStoredAssetGroups(),
+      currencies: getStoredCurrencies(),
       isLoading: false,
     });
   }, []);
 
-  const activeWallets = useMemo(
-    () => state.wallets.filter((wallet) => !wallet.isArchived),
-    [state.wallets],
+  const activeAssets = useMemo(
+    () => state.assets.filter((a) => !a.isArchived).sort((a, b) => a.orderSeq - b.orderSeq),
+    [state.assets],
   );
 
-  const archivedWallets = useMemo(
-    () => state.wallets.filter((wallet) => wallet.isArchived),
-    [state.wallets],
+  const archivedAssets = useMemo(
+    () => state.assets.filter((a) => a.isArchived),
+    [state.assets],
   );
 
-  const getWalletById = useCallback(
-    (id: string) => state.wallets.find((wallet) => wallet.id === id),
-    [state.wallets],
+  const getAssetByUid = useCallback(
+    (uid: string) => state.assets.find((a) => a.uid === uid),
+    [state.assets],
   );
 
-  function persist(nextWallets: Wallet[]) {
-    storeWallets(nextWallets);
+  const getCurrencyByUid = useCallback(
+    (uid: string) => state.currencies.find((c) => c.uid === uid),
+    [state.currencies],
+  );
+
+  const getGroupLabel = useCallback(
+    (groupUid: string) => {
+      const group = state.assetGroups.find((g) => g.uid === groupUid);
+      if (group) return group.name;
+      const numericType = Number(groupUid) as AssetGroupType;
+      return ASSET_GROUP_LABELS[numericType] ?? "Other";
+    },
+    [state.assetGroups],
+  );
+
+  const getCurrencyIso = useCallback(
+    (currencyUid: string) => {
+      const currency = state.currencies.find((c) => c.uid === currencyUid);
+      return currency?.iso ?? "IDR";
+    },
+    [state.currencies],
+  );
+
+  function persist(nextAssets: Asset[]) {
+    storeAssets(nextAssets);
   }
 
-  function addWallet(wallet: Wallet) {
-    setState((previous) => {
-      const nextWallets = [...previous.wallets, wallet];
-      persist(nextWallets);
-      return { ...previous, wallets: nextWallets };
+  function addAsset(asset: Asset) {
+    setState((prev) => {
+      const next = [...prev.assets, asset];
+      persist(next);
+      return { ...prev, assets: next };
     });
   }
 
-  function updateWallet(
-    walletId: string,
-    updates: Partial<Omit<Wallet, "id" | "createdAt">>,
-  ) {
-    setState((previous) => {
-      const nextWallets = previous.wallets.map((wallet) => {
-        if (wallet.id !== walletId) {
-          return wallet;
-        }
-
-        return {
-          ...wallet,
-          ...updates,
-          updatedAt: new Date().toISOString(),
-        };
+  function updateAsset(assetUid: string, updates: Partial<Omit<Asset, "uid">>) {
+    setState((prev) => {
+      const next = prev.assets.map((a) => {
+        if (a.uid !== assetUid) return a;
+        return { ...a, ...updates, utime: Date.now() };
       });
-
-      persist(nextWallets);
-      return { ...previous, wallets: nextWallets };
+      persist(next);
+      return { ...prev, assets: next };
     });
   }
 
-  function deleteWallet(walletId: string) {
-    setState((previous) => {
-      const nextWallets = previous.wallets.filter(
-        (wallet) => wallet.id !== walletId,
-      );
-      persist(nextWallets);
-      return { ...previous, wallets: nextWallets };
+  function deleteAsset(assetUid: string) {
+    setState((prev) => {
+      const next = prev.assets.filter((a) => a.uid !== assetUid);
+      persist(next);
+      return { ...prev, assets: next };
     });
   }
 
-  function archiveWallet(walletId: string) {
-    updateWallet(walletId, { isArchived: true });
+  function archiveAsset(assetUid: string) {
+    updateAsset(assetUid, { isArchived: true });
   }
 
-  function restoreWallet(walletId: string) {
-    updateWallet(walletId, { isArchived: false });
+  function restoreAsset(assetUid: string) {
+    updateAsset(assetUid, { isArchived: false });
   }
 
-  function adjustBalance(adjustment: WalletBalanceAdjustment) {
-    setState((previous) => {
-      const nextWallets = previous.wallets.map((wallet) => {
-        if (wallet.id !== adjustment.walletId) {
-          return wallet;
-        }
-
-        return {
-          ...wallet,
-          balance: wallet.balance + adjustment.amount,
-          updatedAt: adjustment.adjustedAt,
-        };
+  function adjustBalance(adjustment: BalanceAdjustment) {
+    setState((prev) => {
+      const next = prev.assets.map((a) => {
+        if (a.uid !== adjustment.assetUid) return a;
+        return { ...a, balance: a.balance + adjustment.amount, utime: adjustment.adjustedAt };
       });
-
-      persist(nextWallets);
-      return { ...previous, wallets: nextWallets };
+      persist(next);
+      return { ...prev, assets: next };
     });
   }
 
-  function updateWalletBalance(walletId: string, delta: number) {
-    setState((previous) => {
-      const nextWallets = previous.wallets.map((wallet) => {
-        if (wallet.id !== walletId) {
-          return wallet;
-        }
-
-        return {
-          ...wallet,
-          balance: wallet.balance + delta,
-          updatedAt: new Date().toISOString(),
-        };
+  function updateAssetBalance(assetUid: string, delta: number) {
+    setState((prev) => {
+      const next = prev.assets.map((a) => {
+        if (a.uid !== assetUid) return a;
+        return { ...a, balance: a.balance + delta, utime: Date.now() };
       });
-
-      persist(nextWallets);
-      return { ...previous, wallets: nextWallets };
+      persist(next);
+      return { ...prev, assets: next };
     });
   }
 
-  function reorderWallets(orderedIds: string[]) {
-    setState((previous) => {
-      const walletMap = new Map(
-        previous.wallets.map((wallet) => [wallet.id, wallet]),
-      );
+  function reorderAssets(orderedUids: string[]) {
+    setState((prev) => {
+      const assetMap = new Map(prev.assets.map((a) => [a.uid, a]));
+      const reordered = orderedUids
+        .map((uid, i) => {
+          const asset = assetMap.get(uid);
+          return asset ? { ...asset, orderSeq: i + 1 } : undefined;
+        })
+        .filter((a): a is Asset => a !== undefined);
 
-      const reordered = orderedIds
-        .map((id) => walletMap.get(id))
-        .filter((wallet): wallet is Wallet => wallet !== undefined);
-
-      const remaining = previous.wallets.filter(
-        (wallet) => !orderedIds.includes(wallet.id),
-      );
-
-      const nextWallets = [...reordered, ...remaining];
-      persist(nextWallets);
-      return { ...previous, wallets: nextWallets };
+      const remaining = prev.assets.filter((a) => !orderedUids.includes(a.uid));
+      const next = [...reordered, ...remaining];
+      persist(next);
+      return { ...prev, assets: next };
     });
   }
 
   return {
-    wallets: state.wallets,
+    assets: state.assets,
+    assetGroups: state.assetGroups,
+    currencies: state.currencies,
     isLoading: state.isLoading,
-    activeWallets,
-    archivedWallets,
-    getWalletById,
-    addWallet,
-    updateWallet,
-    deleteWallet,
-    archiveWallet,
-    restoreWallet,
+    activeAssets,
+    archivedAssets,
+    getAssetByUid,
+    getCurrencyByUid,
+    getGroupLabel,
+    getCurrencyIso,
+    addAsset,
+    updateAsset,
+    deleteAsset,
+    archiveAsset,
+    restoreAsset,
     adjustBalance,
-    reorderWallets,
-    updateWalletBalance,
+    reorderAssets,
+    updateAssetBalance,
   };
 }

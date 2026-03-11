@@ -1,34 +1,37 @@
 "use client";
 
 import { useMemo } from "react";
-import { CustomCategory, Transaction } from "@/features/transactions/types/transaction";
-import { Wallet } from "@/features/wallets/types/wallet";
+import { Category } from "@/features/transactions/types/transaction";
+import { DisplayTransaction } from "@/features/transactions/hooks/use-transactions";
+import { Asset } from "@/features/wallets/types/wallet";
 import { groupTransactionsByDate } from "@/features/transactions/utils/group-transactions-by-date";
-import { formatCurrency } from "@/features/wallets/utils/format-currency";
+import { formatCurrencyByIso } from "@/features/wallets/utils/format-currency";
 import { TransactionCard } from "./transaction-card";
 
 type TransactionListProps = {
-  transactions: Transaction[];
-  wallets: Wallet[];
-  customCategories: CustomCategory[];
-  onEdit: (transaction: Transaction) => void;
-  onDelete: (transaction: Transaction) => void;
+  transactions: DisplayTransaction[];
+  assets: Asset[];
+  categories: Category[];
+  getCurrencyIso: (uid: string) => string;
+  onEdit: (transaction: DisplayTransaction) => void;
+  onDelete: (transaction: DisplayTransaction) => void;
 };
 
 export function TransactionList({
   transactions,
-  wallets,
-  customCategories,
+  assets,
+  categories,
+  getCurrencyIso,
   onEdit,
   onDelete,
 }: TransactionListProps) {
-  const walletMap = useMemo(() => {
-    const map = new Map<string, Wallet>();
-    for (const wallet of wallets) {
-      map.set(wallet.id, wallet);
+  const assetMap = useMemo(() => {
+    const map = new Map<string, Asset>();
+    for (const a of assets) {
+      map.set(a.uid, a);
     }
     return map;
-  }, [wallets]);
+  }, [assets]);
 
   const dateGroups = useMemo(
     () => groupTransactionsByDate(transactions),
@@ -57,33 +60,40 @@ export function TransactionList({
             <div className="flex gap-2 text-[10px] font-medium">
               {group.income > 0 && (
                 <span className="text-success">
-                  +{formatCurrency(group.income, "IDR")}
+                  +{formatCurrencyByIso(group.income, "IDR")}
                 </span>
               )}
               {group.expense > 0 && (
                 <span className="text-danger">
-                  -{formatCurrency(group.expense, "IDR")}
+                  -{formatCurrencyByIso(group.expense, "IDR")}
                 </span>
               )}
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            {group.transactions.map((txn) => (
-              <TransactionCard
-                key={txn.id}
-                transaction={txn}
-                wallet={walletMap.get(txn.walletId)}
-                targetWallet={
-                  txn.targetWalletId
-                    ? walletMap.get(txn.targetWalletId)
-                    : undefined
-                }
-                customCategories={customCategories}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
-            ))}
+            {group.transactions.map((txn) => {
+              const displayTxn = txn as DisplayTransaction;
+              const sourceAsset = assetMap.get(txn.assetUid);
+              const targetAsset = txn.toAssetUid
+                ? assetMap.get(txn.toAssetUid)
+                : displayTxn.pairedTx
+                  ? assetMap.get(displayTxn.pairedTx.assetUid)
+                  : undefined;
+
+              return (
+                <TransactionCard
+                  key={txn.uid}
+                  transaction={displayTxn}
+                  asset={sourceAsset}
+                  targetAsset={targetAsset}
+                  categories={categories}
+                  getCurrencyIso={getCurrencyIso}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              );
+            })}
           </div>
         </section>
       ))}

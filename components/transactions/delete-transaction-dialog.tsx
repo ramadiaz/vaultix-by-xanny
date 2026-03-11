@@ -1,39 +1,37 @@
 "use client";
 
-import { Transaction } from "@/features/transactions/types/transaction";
-import { BUILTIN_CATEGORY_LABELS } from "@/features/transactions/config/transaction-config";
+import { Category } from "@/features/transactions/types/transaction";
+import { DisplayTransaction } from "@/features/transactions/hooks/use-transactions";
+import { getCategoryDisplayName } from "@/features/transactions/config/transaction-config";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
 type DeleteTransactionDialogProps = {
-  transaction: Transaction | null;
+  transaction: DisplayTransaction | null;
+  categories: Category[];
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (transaction: Transaction) => void;
+  onConfirm: (transaction: DisplayTransaction) => void;
 };
 
 export function DeleteTransactionDialog({
   transaction,
+  categories,
   isOpen,
   onOpenChange,
   onConfirm,
 }: DeleteTransactionDialogProps) {
-  if (!transaction) {
-    return null;
-  }
+  if (!transaction) return null;
 
   function handleConfirm() {
-    if (!transaction) {
-      return;
-    }
-
+    if (!transaction) return;
     onConfirm(transaction);
     onOpenChange(false);
   }
 
   const label =
-    transaction.description ||
-    BUILTIN_CATEGORY_LABELS[transaction.category] ||
+    transaction.content ||
+    getCategoryDisplayName(transaction.ctgUid, categories) ||
     "this transaction";
 
   return (

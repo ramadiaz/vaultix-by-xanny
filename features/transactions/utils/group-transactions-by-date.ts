@@ -33,13 +33,17 @@ function formatDateLabel(dateKey: string): string {
   });
 }
 
+function txDateKey(txn: Transaction): string {
+  return new Date(txn.date).toISOString().split("T")[0];
+}
+
 export function groupTransactionsByDate(
   transactions: Transaction[],
 ): TransactionDateGroup[] {
   const groupMap = new Map<string, Transaction[]>();
 
   for (const txn of transactions) {
-    const dateKey = txn.occurredAt.split("T")[0];
+    const dateKey = txDateKey(txn);
 
     if (!groupMap.has(dateKey)) {
       groupMap.set(dateKey, []);
@@ -59,22 +63,19 @@ export function groupTransactionsByDate(
     let expense = 0;
 
     for (const txn of dayTransactions) {
-      if (txn.kind === "income") {
-        income += txn.amount;
+      if (txn.doType === 2) {
+        income += txn.money;
       }
 
-      if (txn.kind === "expense") {
-        expense += txn.amount;
+      if (txn.doType === 1) {
+        expense += txn.money;
       }
     }
 
     return {
       dateKey,
       label: formatDateLabel(dateKey),
-      transactions: dayTransactions.sort(
-        (a, b) =>
-          new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),
-      ),
+      transactions: dayTransactions.sort((a, b) => b.date - a.date),
       income,
       expense,
     };
