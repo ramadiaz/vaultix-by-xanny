@@ -1,0 +1,74 @@
+---
+description: Core architecture, UX, and coding standards for Vaultix by Xanny
+alwaysApply: true
+---
+
+# Vaultix by Xanny – Project Rules
+
+## Product & Scope
+
+- Vaultix by Xanny is a **Next.js web app** that acts as a **mobile‑first money tracker**.
+- The app is designed to work **fully offline** and **does not use any custom backend**.
+- **User data is owned by the user** and is stored in **their own Google Drive**, with local offline storage on the device.
+
+## Core Features
+
+- **Multi wallet account**: support multiple independent wallets per user.
+- **Currency settings**: default to **IDR**, with clear UX for changing currency.
+- **Transactions**: CRUD for income/expense/transfer with categories, notes, and timestamps.
+- **Stats**: summary views and charts based on local data.
+- **Backup & restore**: export/import and Google Drive sync.
+- **Offline access**: all critical flows must work without network.
+- **Drive sync**: user‑initiated sync between local storage and Google Drive.
+
+## UX, UI, and Platform
+
+- **Mobile first**: design and layout must prioritize phone screens; desktop is secondary.
+- **Design language**: take inspiration from the **Stockbit** mobile app style (clean, modern, card‑based).
+- **Color modes**: support **light and dark mode**, with **dark mode as the default**.
+- **UX writing**: all user‑facing text **must be in English**, concise and consistent.
+
+## Architecture & Data
+
+- No custom backend services; rely on **local storage / IndexedDB** plus **Google Drive** as the remote store.
+- Implement **offline‑first** flows:
+  - CRUD operations must always work against local storage.
+  - Sync to Google Drive is explicit and resilient to conflicts.
+- Treat Google Drive as a **remote backup/sync layer**, not as the primary source of truth.
+
+## React & Code Organization
+
+- Use **Next.js app router** with **functional React components only**.
+- **Never write comments in code**; express intent through clear naming and structure.
+- **All variable and function names must be in English** and human readable.
+- Structure code using:
+  - **Hooks** for reusable stateful logic.
+  - **Services** for data access and business rules.
+  - **Utils** for pure helpers.
+  - **Components** and **HOCs** for UI composition and cross‑cutting UI behavior.
+  - **Config** modules for constants, feature flags, and environment‑specific settings.
+
+## Data Access & API Pattern
+
+- For any external or storage interaction in the React frontend, **always follow this flow**:
+  - `axios API client` → `service` → `hook` → `page/component`.
+- **Pages and UI components must never call axios or storage APIs directly**; they consume hooks and services.
+- Services must encapsulate:
+  - Google Drive integration.
+  - Local storage/IndexedDB read/write.
+  - Sync and conflict‑resolution logic.
+
+## Safety & Reusability
+
+- Before modifying any shared function, hook, or component, **check project‑wide usage**.
+  - If it is reused in multiple places, **do not change its behavior in a breaking way**.
+  - Prefer creating a **new component/function** instead of breaking existing usages.
+- Favor **small, composable, and reusable** building blocks over large, monolithic modules.
+
+## Code Quality
+
+- All code must be **clean, optimized, and readable**:
+  - Keep functions small and focused.
+  - Avoid duplication; extract shared logic into hooks, utils, or services.
+  - Respect existing **ESLint and Next.js configuration**; align with current project settings before adding new ones.
+
