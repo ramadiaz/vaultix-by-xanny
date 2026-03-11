@@ -1,80 +1,95 @@
- "use client";
+"use client";
 
-import { useMemo } from "react";
+import { useState } from "react";
 import { Wallet } from "@/features/wallets/types/wallet";
+import { WalletCard } from "./wallet-card";
+import { cn } from "@/lib/utils/cn";
+
+type WalletListTab = "active" | "archived";
 
 type WalletListProps = {
-  wallets: Wallet[];
+  activeWallets: Wallet[];
+  archivedWallets: Wallet[];
+  onTapWallet: (wallet: Wallet) => void;
+  onEditWallet: (wallet: Wallet) => void;
+  onArchiveWallet: (wallet: Wallet) => void;
+  onRestoreWallet: (wallet: Wallet) => void;
+  onDeleteWallet: (wallet: Wallet) => void;
 };
 
-export function WalletList({ wallets }: WalletListProps) {
-  const totalBalance = useMemo(() => {
-    if (wallets.length === 0) {
-      return 0;
-    }
+export function WalletList({
+  activeWallets,
+  archivedWallets,
+  onTapWallet,
+  onEditWallet,
+  onArchiveWallet,
+  onRestoreWallet,
+  onDeleteWallet,
+}: WalletListProps) {
+  const [tab, setTab] = useState<WalletListTab>("active");
 
-    return wallets.reduce((sum, wallet) => sum + wallet.balance, 0);
-  }, [wallets]);
+  const hasArchived = archivedWallets.length > 0;
+  const wallets = tab === "active" ? activeWallets : archivedWallets;
 
   return (
-    <div className="flex flex-col gap-4">
-      <section className="rounded-2xl bg-accent-soft px-4 py-3 text-sm text-foreground">
-        <div className="flex items-baseline justify-between">
-          <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-soft">
-            Total Balance
-          </span>
-          <span className="text-[10px] font-medium text-muted">IDR</span>
+    <section className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <div className="flex gap-1">
+          <button
+            type="button"
+            onClick={() => setTab("active")}
+            className={cn(
+              "rounded-full px-3 py-1 text-[11px] font-medium transition",
+              tab === "active"
+                ? "bg-primary/15 text-primary"
+                : "text-muted hover:text-foreground",
+            )}
+          >
+            Active ({activeWallets.length})
+          </button>
+          {hasArchived && (
+            <button
+              type="button"
+              onClick={() => setTab("archived")}
+              className={cn(
+                "rounded-full px-3 py-1 text-[11px] font-medium transition",
+                tab === "archived"
+                  ? "bg-warning/15 text-warning"
+                  : "text-muted hover:text-foreground",
+              )}
+            >
+              Archived ({archivedWallets.length})
+            </button>
+          )}
         </div>
-        <p className="mt-1 text-2xl font-semibold tracking-tight">
-          {totalBalance.toLocaleString("id-ID", {
-            style: "currency",
-            currency: "IDR",
-            maximumFractionDigits: 0,
-          })}
-        </p>
-      </section>
+      </div>
 
-      <section className="flex flex-col gap-2">
-        <div className="flex items-center justify-between text-xs text-muted-soft">
-          <span className="font-medium uppercase tracking-[0.16em]">Wallets</span>
-          <span>{wallets.length} active</span>
+      {wallets.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border-subtle bg-background/60 px-4 py-8 text-center text-xs backdrop-blur-md">
+          <p className="font-medium text-foreground">
+            {tab === "active" ? "No wallets yet" : "No archived wallets"}
+          </p>
+          <p className="mt-1 text-[11px] text-muted">
+            {tab === "active"
+              ? "Create your first wallet to start tracking your money."
+              : "Wallets you archive will appear here."}
+          </p>
         </div>
-
-        {wallets.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border-subtle bg-background px-4 py-6 text-center text-xs text-muted">
-            <p className="font-medium">No wallets yet</p>
-            <p className="mt-1 text-[11px]">
-              Create your first wallet to start tracking your money.
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {wallets.map((wallet) => (
-              <div
-                key={wallet.id}
-                className="flex items-center justify-between rounded-2xl border border-border-subtle bg-background px-4 py-3"
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium text-foreground">
-                    {wallet.name}
-                  </span>
-                  <span className="text-[11px] uppercase tracking-[0.16em] text-muted-soft">
-                    {wallet.type} • {wallet.currency}
-                  </span>
-                </div>
-                <span className="text-sm font-semibold text-foreground">
-                  {wallet.balance.toLocaleString("id-ID", {
-                    style: "currency",
-                    currency: "IDR",
-                    maximumFractionDigits: 0,
-                  })}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-    </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {wallets.map((wallet) => (
+            <WalletCard
+              key={wallet.id}
+              wallet={wallet}
+              onTap={onTapWallet}
+              onEdit={onEditWallet}
+              onArchive={onArchiveWallet}
+              onRestore={onRestoreWallet}
+              onDelete={onDeleteWallet}
+            />
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
-
