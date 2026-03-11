@@ -8,8 +8,9 @@ alwaysApply: true
 ## Product & Scope
 
 - Vaultix by Xanny is a **Next.js web app** that acts as a **mobile‑first money tracker**.
-- The app is designed to work **fully offline** and **does not use any custom backend**.
-- **User data is owned by the user** and is stored in **their own Google Drive**, with local offline storage on the device.
+- The app uses a **Golang backend** (vaultix-server) with **MongoDB Atlas** for auth and backup.
+- **User data** is stored locally (localStorage/IndexedDB) and can be backed up to the server.
+- **Auth** uses username/password and JWT tokens for API access.
 
 ## Core Features
 
@@ -17,9 +18,9 @@ alwaysApply: true
 - **Currency settings**: default to **IDR**, with clear UX for changing currency.
 - **Transactions**: CRUD for income/expense/transfer with categories, notes, and timestamps.
 - **Stats**: summary views and charts based on local data.
-- **Backup & restore**: export/import and Google Drive sync.
-- **Offline access**: all critical flows must work without network.
-- **Drive sync**: user‑initiated sync between local storage and Google Drive.
+- **Backup & restore**: export/import and sync to backend (MongoDB).
+- **Offline access**: local CRUD works without network; sync requires connection.
+- **Backup sync**: user‑initiated sync between local storage and backend.
 
 ## UX, UI, and Platform
 
@@ -31,11 +32,10 @@ alwaysApply: true
 
 ## Architecture & Data
 
-- No custom backend services; rely on **local storage / IndexedDB** plus **Google Drive** as the remote store.
-- Implement **offline‑first** flows:
-  - CRUD operations must always work against local storage.
-  - Sync to Google Drive is explicit and resilient to conflicts.
-- Treat Google Drive as a **remote backup/sync layer**, not as the primary source of truth.
+- **Frontend** (vaultix-by-xanny): Next.js, local storage/IndexedDB, axios API client.
+- **Backend** (vaultix-server): Golang, MongoDB Atlas, JWT auth.
+- CRUD operations work against local storage; backup sync is explicit and user‑initiated.
+- Treat backend as a **remote backup layer**, not the primary source of truth for live data.
 
 ## React & Code Organization
 
@@ -56,7 +56,7 @@ alwaysApply: true
   - `axios API client` → `service` → `hook` → `page/component`.
 - **Pages and UI components must never call axios or storage APIs directly**; they consume hooks and services.
 - Services must encapsulate:
-  - Google Drive integration.
+  - Backend API calls (auth, backup).
   - Local storage/IndexedDB read/write.
   - Sync and conflict‑resolution logic.
 

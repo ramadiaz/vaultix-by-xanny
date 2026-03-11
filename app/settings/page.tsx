@@ -6,7 +6,7 @@ import { MobileShell } from "@/components/layout/mobile-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { useDriveSync } from "@/features/drive/hooks/use-drive-sync";
+import { useBackupSync } from "@/features/backup/hooks/use-backup-sync";
 import { exportVaultixBackup } from "@/features/import-export/services/vaultix-export.service";
 import { exportAsMmbak } from "@/features/import-export/services/mmbak-export.service";
 import {
@@ -40,14 +40,14 @@ type ImportStatus =
 export default function SettingsPage() {
   const { signOut } = useAuth();
   const {
-    state: driveState,
+    state: backupState,
     backups,
-    sync: syncToDrive,
+    sync: syncToBackup,
     fetchBackups,
     restore,
     restoreLatest,
-    clearState: clearDriveState,
-  } = useDriveSync();
+    clearState: clearBackupState,
+  } = useBackupSync();
   const excelInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
   const mmbakInputRef = useRef<HTMLInputElement>(null);
@@ -352,30 +352,30 @@ export default function SettingsPage() {
 
           <Card className="flex flex-col gap-3">
             <h3 className="text-sm font-semibold text-foreground">
-              Google Drive Sync
+              Backup Sync
             </h3>
             <p className="text-[11px] leading-relaxed text-muted">
-              Backup and restore your data from your Google Drive.
+              Backup and restore your data to the cloud.
             </p>
             <div className="flex flex-col gap-2">
               <Button
                 type="button"
                 variant="secondary"
                 className="h-9"
-                onClick={syncToDrive}
+                onClick={syncToBackup}
                 disabled={
-                  driveState.status === "syncing" ||
-                  driveState.status === "listing" ||
-                  driveState.status === "restoring"
+                  backupState.status === "syncing" ||
+                  backupState.status === "listing" ||
+                  backupState.status === "restoring"
                 }
               >
-                {driveState.status === "syncing" ? (
+                {backupState.status === "syncing" ? (
                   <span className="flex items-center justify-center gap-2">
                     <LoadingSpinner size="sm" />
                     Syncing
                   </span>
                 ) : (
-                  "Sync to Drive"
+                  "Sync to backup"
                 )}
               </Button>
               <Button
@@ -384,18 +384,18 @@ export default function SettingsPage() {
                 className="h-9"
                 onClick={fetchBackups}
                 disabled={
-                  driveState.status === "syncing" ||
-                  driveState.status === "listing" ||
-                  driveState.status === "restoring"
+                  backupState.status === "syncing" ||
+                  backupState.status === "listing" ||
+                  backupState.status === "restoring"
                 }
               >
-                {driveState.status === "listing" ? (
+                {backupState.status === "listing" ? (
                   <span className="flex items-center justify-center gap-2">
                     <LoadingSpinner size="sm" />
                     Loading
                   </span>
                 ) : (
-                  "Restore from Drive"
+                  "Restore from backup"
                 )}
               </Button>
             </div>
@@ -405,7 +405,7 @@ export default function SettingsPage() {
                   <p className="text-[11px] font-medium text-muted-soft">
                     Available backups
                   </p>
-                  {driveState.status === "restoring" && (
+                  {backupState.status === "restoring" && (
                     <span className="flex items-center gap-1.5 text-[10px] font-medium text-primary">
                       <LoadingSpinner size="sm" />
                       Restoring
@@ -426,7 +426,7 @@ export default function SettingsPage() {
                       variant="ghost"
                       className="h-7 text-xs"
                       onClick={() => restore(b.id)}
-                      disabled={driveState.status === "restoring"}
+                      disabled={backupState.status === "restoring"}
                     >
                       Restore
                     </Button>
@@ -434,34 +434,34 @@ export default function SettingsPage() {
                 ))}
               </div>
             )}
-            {(driveState.status === "synced" ||
-              driveState.status === "restored") && (
+            {(backupState.status === "synced" ||
+              backupState.status === "restored") && (
               <div className="flex flex-col gap-1">
                 <p className="text-[12px] font-medium text-success">
-                  {driveState.message}
+                  {backupState.message}
                 </p>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   className="h-8 w-fit text-xs"
-                  onClick={clearDriveState}
+                  onClick={clearBackupState}
                 >
                   Dismiss
                 </Button>
               </div>
             )}
-            {driveState.status === "error" && (
+            {backupState.status === "error" && (
               <div className="flex flex-col gap-1">
                 <p className="text-[12px] font-medium text-danger">
-                  {driveState.message}
+                  {backupState.message}
                 </p>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   className="h-8 w-fit text-xs"
-                  onClick={clearDriveState}
+                  onClick={clearBackupState}
                 >
                   Dismiss
                 </Button>
@@ -834,6 +834,18 @@ export default function SettingsPage() {
                 Add category
               </Button>
             </div>
+          </Card>
+
+          <Card className="flex flex-col gap-3">
+            <h3 className="text-sm font-semibold text-foreground">Account</h3>
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-9 w-fit"
+              onClick={signOut}
+            >
+              Sign out
+            </Button>
           </Card>
         </div>
       </MobileShell>

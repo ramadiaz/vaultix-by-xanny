@@ -1,23 +1,24 @@
- "use client";
+"use client";
 
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { AuthUser } from "../types/auth-user";
 import {
   getStoredAuthState,
-  initializeGoogleIdentity,
-  revokeGoogleSession,
-  startGooglePrompt,
+  loginWithCredentials,
+  registerWithCredentials,
+  clearAuthState,
   storeAuthState,
-} from "../services/google-auth.service";
+} from "../services/auth.service";
 
 type AuthState = {
   user: AuthUser | null;
-  credential: string | null;
+  token: string | null;
   isReady: boolean;
 };
 
 type AuthContextValue = AuthState & {
-  signInWithGoogle: () => void;
+  login: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string) => Promise<void>;
   signOut: () => void;
 };
 
@@ -30,56 +31,53 @@ type AuthProviderProps = {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [state, setState] = useState<AuthState>({
     user: null,
-    credential: null,
+    token: null,
     isReady: false,
   });
 
   useEffect(() => {
     const stored = getStoredAuthState();
-
     setState({
       user: stored.user,
-      credential: stored.credential,
+      token: stored.token,
       isReady: true,
-    });
-
-    initializeGoogleIdentity((nextState) => {
-      setState({
-        user: nextState.user,
-        credential: nextState.credential,
-        isReady: true,
-      });
     });
   }, []);
 
-  function signInWithGoogle() {
-    startGooglePrompt();
+  async function login(username: string, password: string) {
+    const nextState = await loginWithCredentials(username, password);
+    setState({
+      user: nextState.user,
+      token: nextState.token,
+      isReady: true,
+    });
+  }
+
+  async function register(username: string, password: string) {
+    const nextState = await registerWithCredentials(username, password);
+    setState({
+      user: nextState.user,
+      token: nextState.token,
+      isReady: true,
+    });
   }
 
   function signOut() {
-    const currentEmail = state.user?.email ?? null;
-
-    revokeGoogleSession(currentEmail, () => {
-      const clearedState = {
-        user: null,
-        credential: null,
-      };
-
-      storeAuthState(clearedState);
-
-      setState({
-        user: null,
-        credential: null,
-        isReady: true,
-      });
+    const clearedState = clearAuthState();
+    storeAuthState(clearedState);
+    setState({
+      user: null,
+      token: null,
+      isReady: true,
     });
   }
 
   const value: AuthContextValue = {
     user: state.user,
-    credential: state.credential,
+    token: state.token,
     isReady: state.isReady,
-    signInWithGoogle,
+    login,
+    register,
     signOut,
   };
 
@@ -95,4 +93,3 @@ export function useAuth(): AuthContextValue {
 
   return context;
 }
-
