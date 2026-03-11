@@ -16,6 +16,8 @@ export function SyncManager() {
   useEffect(() => {
     if (!user) return;
 
+    sync();
+
     function handleDataChanged() {
       if (isSyncingRef.current) return;
       if (debounceTimerRef.current) {

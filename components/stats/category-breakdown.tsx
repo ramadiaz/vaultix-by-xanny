@@ -8,6 +8,7 @@ import { formatCurrencyByIso } from "@/features/wallets/utils/format-currency";
 type CategoryBreakdownProps = {
   expenseBreakdown: CategoryBreakdownItem[];
   incomeBreakdown: CategoryBreakdownItem[];
+  onCategoryClick?: (item: CategoryBreakdownItem, doType: 1 | 2) => void;
 };
 
 type CustomTooltipProps = {
@@ -70,15 +71,34 @@ function DonutChart({
   );
 }
 
-function CategoryList({ items }: { items: CategoryBreakdownItem[] }) {
-  const visible = items.slice(0, 6);
-
+function CategoryList({
+  items,
+  doType,
+  onCategoryClick,
+}: {
+  items: CategoryBreakdownItem[];
+  doType: 1 | 2;
+  onCategoryClick?: (item: CategoryBreakdownItem, doType: 1 | 2) => void;
+}) {
   return (
     <div className="mt-4 space-y-3">
-      {visible.map((item, index) => (
+      {items.map((item, index) => (
         <div
           key={item.ctgUid ?? "uncategorized"}
-          className="flex min-h-[44px] items-center gap-3"
+          role={onCategoryClick ? "button" : undefined}
+          tabIndex={onCategoryClick ? 0 : undefined}
+          onClick={onCategoryClick ? () => onCategoryClick(item, doType) : undefined}
+          onKeyDown={
+            onCategoryClick
+              ? (e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onCategoryClick(item, doType);
+                  }
+                }
+              : undefined
+          }
+          className={`flex min-h-[44px] items-center gap-3 ${onCategoryClick ? "cursor-pointer select-none transition-colors active:opacity-80" : ""}`}
         >
           <span className="w-4 shrink-0 text-center text-[11px] font-medium text-muted-soft">
             {index + 1}
@@ -122,10 +142,12 @@ function CategoryList({ items }: { items: CategoryBreakdownItem[] }) {
 export function CategoryBreakdown({
   expenseBreakdown,
   incomeBreakdown,
+  onCategoryClick,
 }: CategoryBreakdownProps) {
   const [activeTab, setActiveTab] = useState<"expense" | "income">("expense");
 
   const data = activeTab === "expense" ? expenseBreakdown : incomeBreakdown;
+  const doType: 1 | 2 = activeTab === "expense" ? 1 : 2;
   const total = data.reduce((s, i) => s + i.amount, 0);
   const isEmpty = data.length === 0;
 
@@ -168,7 +190,7 @@ export function CategoryBreakdown({
       ) : (
         <div className="flex flex-col items-center gap-1">
           <DonutChart data={data} total={total} />
-          <CategoryList items={data} />
+          <CategoryList items={data} doType={doType} onCategoryClick={onCategoryClick} />
         </div>
       )}
     </div>

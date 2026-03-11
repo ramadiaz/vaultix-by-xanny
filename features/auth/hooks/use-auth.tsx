@@ -2,6 +2,7 @@
 
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { AuthUser } from "../types/auth-user";
+import { clearAllData } from "@/lib/storage/sqlite-database";
 import {
   getStoredAuthState,
   loginWithCredentials,
@@ -63,6 +64,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   function signOut() {
+    clearAllData();
     const clearedState = clearAuthState();
     storeAuthState(clearedState);
     setState({
@@ -70,6 +72,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       token: null,
       isReady: true,
     });
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("vaultix:data-reload"));
+    }
   }
 
   const value: AuthContextValue = {

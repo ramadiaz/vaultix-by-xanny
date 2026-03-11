@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Transaction, Category } from "@/features/transactions/types/transaction";
 import { getStoredTransactions } from "@/features/transactions/services/transaction-storage.service";
 import { getStoredCategories } from "@/features/transactions/services/category-storage.service";
@@ -25,6 +25,7 @@ type UseStatsValue = {
   expenseCategoryBreakdown: CategoryBreakdownItem[];
   incomeCategoryBreakdown: CategoryBreakdownItem[];
   totalTransactionCount: number;
+  getTransactionsByCategory: (ctgUid: string | null, doType: 1 | 2) => Transaction[];
 };
 
 export function useStats(): UseStatsValue {
@@ -95,6 +96,15 @@ export function useStats(): UseStatsValue {
     [filteredTransactions, categories],
   );
 
+  const getTransactionsByCategory = useCallback(
+    (ctgUid: string | null, doType: 1 | 2): Transaction[] => {
+      return filteredTransactions.filter(
+        (t) => t.doType === doType && (t.ctgUid ?? null) === ctgUid,
+      );
+    },
+    [filteredTransactions],
+  );
+
   return {
     isLoading,
     period,
@@ -106,5 +116,6 @@ export function useStats(): UseStatsValue {
     expenseCategoryBreakdown,
     incomeCategoryBreakdown,
     totalTransactionCount,
+    getTransactionsByCategory,
   };
 }

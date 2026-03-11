@@ -349,3 +349,10 @@ export async function persistDatabase(db?: Database): Promise<void> {
   window.dispatchEvent(new CustomEvent("vaultix:data-changed"));
 }
 
+export function clearAllData(): void {
+  if (isBrowser) {
+    window.localStorage.removeItem(DB_KEY);
+  }
+  dbPromise = null;
+}
+
