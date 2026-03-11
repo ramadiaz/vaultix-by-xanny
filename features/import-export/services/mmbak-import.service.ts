@@ -120,10 +120,10 @@ function parseAssetGroups(db: Database): AssetGroup[] {
 
   return rows.map((r) => ({
     uid: String(r.uid),
-    name: r.ACC_GROUP_NAME,
-    type: r.TYPE as AssetGroup["type"],
-    orderSeq: r.ORDERSEQ ?? 0,
-    isDel: r.IS_DEL === 1,
+    name: String(r.ACC_GROUP_NAME ?? ""),
+    type: (Number(r.TYPE) || 7) as AssetGroup["type"],
+    orderSeq: Number(r.ORDERSEQ) || 0,
+    isDel: Number(r.IS_DEL) === 1,
   }));
 }
 
@@ -137,17 +137,17 @@ function parseCurrencies(db: Database): Currency[] {
 
   return rows.map((r) => ({
     uid: String(r.uid),
-    name: r.NAME ?? "",
-    iso: r.ISO ?? "",
-    mainIso: r.MAIN_ISO ?? r.ISO ?? "",
-    symbol: r.SYMBOL ?? "",
-    rate: r.RATE ?? 1,
-    symbolPosition: (r.SYMBOL_POSITION === "S" ? "S" : "P") as "P" | "S",
-    isMainCurrency: r.IS_MAIN_CURRENCY === 1,
-    isShow: r.IS_SHOW === 1,
-    decimalPoint: r.DECIMAL_POINT ?? 2,
-    isDel: r.IS_DEL === 1,
-    orderSeq: r.ORDER_SEQ ?? 0,
+    name: String(r.NAME ?? ""),
+    iso: String(r.ISO ?? ""),
+    mainIso: String(r.MAIN_ISO ?? r.ISO ?? ""),
+    symbol: String(r.SYMBOL ?? ""),
+    rate: Number(r.RATE) || 1,
+    symbolPosition: (String(r.SYMBOL_POSITION) === "S" ? "S" : "P") as "P" | "S",
+    isMainCurrency: Number(r.IS_MAIN_CURRENCY) === 1,
+    isShow: Number(r.IS_SHOW) === 1,
+    decimalPoint: Number(r.DECIMAL_POINT) || 2,
+    isDel: Number(r.IS_DEL) === 1,
+    orderSeq: Number(r.ORDER_SEQ) || 0,
   }));
 }
 
@@ -161,18 +161,18 @@ function parseAssets(db: Database): Asset[] {
 
   return rows.map((r, i) => ({
     uid: String(r.uid),
-    name: r.NIC_NAME ?? "",
+    name: String(r.NIC_NAME ?? ""),
     groupUid: String(r.groupUid ?? "7"),
-    currencyUid: r.currencyUid ?? "IDR_IDR",
-    orderSeq: r.ORDERSEQ ?? i + 1,
+    currencyUid: String(r.currencyUid ?? "IDR_IDR"),
+    orderSeq: Number(r.ORDERSEQ) || i + 1,
     balance: 0,
     isArchived: false,
     color: ASSET_COLORS[i % ASSET_COLORS.length],
-    cardDayFin: r.CARD_DAY_FIN ?? null,
-    cardDayPay: r.CARD_DAY_PAY ?? null,
-    isTransExpense: r.IS_TRANS_EXPENSE === 1,
-    isCardAutoPay: r.IS_CARD_AUTO_PAY === 1,
-    utime: r.A_UTIME ?? Date.now(),
+    cardDayFin: r.CARD_DAY_FIN ? String(r.CARD_DAY_FIN) : null,
+    cardDayPay: r.CARD_DAY_PAY ? String(r.CARD_DAY_PAY) : null,
+    isTransExpense: Number(r.IS_TRANS_EXPENSE) === 1,
+    isCardAutoPay: Number(r.IS_CARD_AUTO_PAY) === 1,
+    utime: Number(r.A_UTIME) || Date.now(),
   }));
 }
 
@@ -186,13 +186,13 @@ function parseCategories(db: Database): Category[] {
 
   return rows.map((r) => ({
     uid: String(r.uid),
-    name: r.NAME ?? "",
-    type: (r.TYPE ?? 1) as 0 | 1,
-    status: (r.STATUS ?? 0) as 0 | 2,
-    pUid: r.pUid && r.pUid !== "0" ? String(r.pUid) : null,
-    orderSeq: r.ORDERSEQ ?? 0,
-    isDel: r.C_IS_DEL === 1,
-    utime: r.C_UTIME ?? 0,
+    name: String(r.NAME ?? ""),
+    type: (Number(r.TYPE) || 1) as 0 | 1,
+    status: (Number(r.STATUS) || 0) as 0 | 2,
+    pUid: r.pUid && String(r.pUid) !== "0" ? String(r.pUid) : null,
+    orderSeq: Number(r.ORDERSEQ) || 0,
+    isDel: Number(r.C_IS_DEL) === 1,
+    utime: Number(r.C_UTIME) || 0,
   }));
 }
 
@@ -212,22 +212,22 @@ function parseTransactions(db: Database): Transaction[] {
     assetUid: String(r.assetUid ?? ""),
     ctgUid: r.ctgUid ? String(r.ctgUid) : null,
     toAssetUid: r.toAssetUid ? String(r.toAssetUid) : null,
-    content: r.ZCONTENT ?? "",
-    date: r.ZDATE ?? Date.now(),
-    writeDate: r.WDATE ?? null,
-    doType: (r.DO_TYPE ?? 1) as DoType,
-    money: r.ZMONEY ?? 0,
-    inMoney: r.IN_ZMONEY ?? r.ZMONEY ?? 0,
+    content: String(r.ZCONTENT ?? ""),
+    date: Number(r.ZDATE) || Date.now(),
+    writeDate: r.WDATE ? String(r.WDATE) : null,
+    doType: (Number(r.DO_TYPE) || 1) as DoType,
+    money: Number(r.ZMONEY) || 0,
+    inMoney: Number(r.IN_ZMONEY) || Number(r.ZMONEY) || 0,
     txUidTrans: r.txUidTrans ? String(r.txUidTrans) : null,
     txUidFee: r.txUidFee ? String(r.txUidFee) : null,
-    isDel: r.IS_DEL === 1,
-    utime: r.UTIME ?? 0,
-    currencyUid: r.currencyUid ?? "IDR_IDR",
-    amountAccount: r.AMOUNT_ACCOUNT ?? r.ZMONEY ?? 0,
-    mark: r.MARK ?? 0,
-    paid: r.paid ?? null,
-    lat: r.lat ?? null,
-    lng: r.lng ?? null,
+    isDel: Number(r.IS_DEL) === 1,
+    utime: Number(r.UTIME) || 0,
+    currencyUid: String(r.currencyUid ?? "IDR_IDR"),
+    amountAccount: Number(r.AMOUNT_ACCOUNT) || Number(r.ZMONEY) || 0,
+    mark: Number(r.MARK) || 0,
+    paid: r.paid ? String(r.paid) : null,
+    lat: r.lat ? String(r.lat) : null,
+    lng: r.lng ? String(r.lng) : null,
   }));
 }
 
@@ -241,10 +241,10 @@ function parseTags(db: Database): Tag[] {
 
   return rows.map((r) => ({
     uid: String(r.uid),
-    name: r.name ?? "",
-    orderSeq: r.orderSeq ?? 0,
-    isDel: r.isDel === 1,
-    utime: r.utime ?? 0,
+    name: String(r.name ?? ""),
+    orderSeq: Number(r.orderSeq) || 0,
+    isDel: Number(r.isDel) === 1,
+    utime: Number(r.utime) || 0,
   }));
 }
 
@@ -260,9 +260,9 @@ function parseTxTags(db: Database): TxTag[] {
     uid: String(r.uid),
     txUid: String(r.txUid ?? ""),
     tagUid: String(r.tagUid ?? ""),
-    orderSeq: r.orderSeq ?? 0,
-    isDel: r.isDel === 1,
-    utime: r.utime ?? 0,
+    orderSeq: Number(r.orderSeq) || 0,
+    isDel: Number(r.isDel) === 1,
+    utime: Number(r.utime) || 0,
   }));
 }
 
@@ -299,7 +299,7 @@ export type MmbakImportResult = ImportResult & {
 
 export async function parseMmbakFile(fileBuffer: ArrayBuffer): Promise<MmbakImportResult> {
   const SQL = await initSqlJs({
-    locateFile: (file: string) => `https://sql.js.org/dist/${file}`,
+    locateFile: () => `/sql-wasm.wasm`,
   });
 
   const db = new SQL.Database(new Uint8Array(fileBuffer));

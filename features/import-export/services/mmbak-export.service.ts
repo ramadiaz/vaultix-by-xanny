@@ -285,7 +285,7 @@ CREATE TABLE android_metadata (locale TEXT);
 
 export async function exportAsMmbak(): Promise<void> {
   const SQL = await initSqlJs({
-    locateFile: (file: string) => `https://sql.js.org/dist/${file}`,
+    locateFile: () => `/sql-wasm.wasm`,
   });
 
   const db = new SQL.Database();

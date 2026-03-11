@@ -34,7 +34,10 @@ function formatDateLabel(dateKey: string): string {
 }
 
 function txDateKey(txn: Transaction): string {
-  return new Date(txn.date).toISOString().split("T")[0];
+  const ts = typeof txn.date === "string" ? Number(txn.date) : txn.date;
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return "1970-01-01";
+  return d.toISOString().split("T")[0];
 }
 
 export function groupTransactionsByDate(
@@ -63,19 +66,20 @@ export function groupTransactionsByDate(
     let expense = 0;
 
     for (const txn of dayTransactions) {
-      if (txn.doType === 2) {
-        income += txn.money;
+      const amount = Number(txn.money) || 0;
+      if (Number(txn.doType) === 2) {
+        income += amount;
       }
 
-      if (txn.doType === 1) {
-        expense += txn.money;
+      if (Number(txn.doType) === 1) {
+        expense += amount;
       }
     }
 
     return {
       dateKey,
       label: formatDateLabel(dateKey),
-      transactions: dayTransactions.sort((a, b) => b.date - a.date),
+      transactions: dayTransactions.sort((a, b) => (Number(b.date) || 0) - (Number(a.date) || 0)),
       income,
       expense,
     };

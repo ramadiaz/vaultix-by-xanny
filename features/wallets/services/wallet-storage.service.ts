@@ -6,8 +6,21 @@ const ASSETS_KEY = "vaultix.assets";
 const ASSET_GROUPS_KEY = "vaultix.asset_groups";
 const CURRENCIES_KEY = "vaultix.currencies";
 
+function sanitizeAsset(a: Record<string, unknown>): Asset {
+  return {
+    ...a,
+    balance: Number(a.balance) || 0,
+    orderSeq: Number(a.orderSeq) || 0,
+    utime: Number(a.utime) || 0,
+    isArchived: a.isArchived === true || Number(a.isArchived) === 1,
+    isTransExpense: a.isTransExpense === true || Number(a.isTransExpense) === 1,
+    isCardAutoPay: a.isCardAutoPay === true || Number(a.isCardAutoPay) === 1,
+  } as Asset;
+}
+
 export function getStoredAssets(): Asset[] {
-  return readLocalStorage<Asset[]>(ASSETS_KEY, []);
+  const raw = readLocalStorage<Record<string, unknown>[]>(ASSETS_KEY, []);
+  return raw.map(sanitizeAsset);
 }
 
 export function storeAssets(assets: Asset[]) {
