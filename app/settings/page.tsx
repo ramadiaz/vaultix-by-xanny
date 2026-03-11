@@ -16,6 +16,8 @@ import {
 } from "@/features/import-export/services/vaultix-import.service";
 import { parseMoneyManagerExcel } from "@/features/import-export/services/money-manager-parser.service";
 import { parseMmbakFile, MmbakImportResult } from "@/features/import-export/services/mmbak-import.service";
+import { useCategories } from "@/features/transactions/hooks/use-custom-categories";
+import { Category } from "@/features/transactions/types/transaction";
 import { getStoredAssets } from "@/features/wallets/services/wallet-storage.service";
 import { getStoredTransactions } from "@/features/transactions/services/transaction-storage.service";
 import { getStoredCategories } from "@/features/transactions/services/category-storage.service";
@@ -41,6 +43,19 @@ export default function SettingsPage() {
   const [importStatus, setImportStatus] = useState<ImportStatus>({ state: "idle" });
   const [importMode, setImportMode] = useState<ImportMode>("merge");
   const [isExportingMmbak, setIsExportingMmbak] = useState(false);
+  const {
+    categories,
+    isLoading: isCategoriesLoading,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+  } = useCategories();
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryIcon, setNewCategoryIcon] = useState("📌");
+  const [newCategoryType, setNewCategoryType] = useState<"income" | "expense">("expense");
+  const [editingCategoryUid, setEditingCategoryUid] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const [editingIcon, setEditingIcon] = useState("📌");
 
   async function handleExportJson() {
     await exportVaultixBackup();
@@ -227,6 +242,64 @@ export default function SettingsPage() {
 
   function handleCancelImport() {
     setImportStatus({ state: "idle" });
+  }
+
+  function handleAddCategoryClick() {
+    if (!newCategoryName.trim()) return;
+    const typeValue = newCategoryType === "income" ? 0 : 1;
+    const name = `${newCategoryIcon} ${newCategoryName.trim()}`.trim();
+    const category: Category = {
+      uid: `cat_${Date.now()}`,
+      name,
+      type: typeValue as 0 | 1,
+      status: 0,
+      pUid: null,
+      orderSeq: 99,
+      isDel: false,
+      utime: Date.now(),
+    };
+    addCategory(category);
+    setNewCategoryName("");
+    setNewCategoryIcon("📌");
+    setNewCategoryType("expense");
+  }
+
+  function startEditCategory(category: Category) {
+    setEditingCategoryUid(category.uid);
+    const parts = category.name.split(" ");
+    if (parts.length > 1) {
+      setEditingIcon(parts[0]);
+      setEditingName(parts.slice(1).join(" "));
+    } else {
+      setEditingIcon("📌");
+      setEditingName(category.name);
+    }
+  }
+
+  function handleSaveCategoryEdit() {
+    if (!editingCategoryUid || !editingName.trim()) {
+      setEditingCategoryUid(null);
+      setEditingName("");
+      setEditingIcon("📌");
+      return;
+    }
+    const name = `${editingIcon} ${editingName.trim()}`.trim();
+    updateCategory(editingCategoryUid, {
+      name,
+      utime: Date.now(),
+    });
+    setEditingCategoryUid(null);
+    setEditingName("");
+    setEditingIcon("📌");
+  }
+
+  function handleDeleteCategoryClick(category: Category) {
+    deleteCategory(category.uid);
+    if (editingCategoryUid === category.uid) {
+      setEditingCategoryUid(null);
+      setEditingName("");
+      setEditingIcon("📌");
+    }
   }
 
   const sourceLabel: Record<ImportSource, string> = {
@@ -462,6 +535,167 @@ export default function SettingsPage() {
             >
               Sign out
             </Button>
+          </Card>
+
+          <Card className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">Categories</h3>
+              {!isCategoriesLoading && (
+                <span className="text-[11px] text-muted">
+                  {categories.filter((c) => !c.isDel && c.status === 0).length} total
+                </span>
+              )}
+            </div>
+
+            <div className="flex gap-1 rounded-xl bg-background-soft p-1">
+              {(["income", "expense"] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setNewCategoryType(t)}
+                  className={cn(
+                    "flex-1 rounded-lg py-2 text-center text-[11px] font-semibold capitalize transition",
+                    newCategoryType === t
+                      ? t === "income"
+                        ? "bg-success/15 text-success"
+                        : "bg-danger/15 text-danger"
+                      : "text-muted",
+                  )}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-col divide-y divide-border-subtle overflow-hidden rounded-2xl border border-border-subtle">
+              {categories
+                .filter(
+                  (c) =>
+                    !c.isDel &&
+                    c.status === 0 &&
+                    c.type === (newCategoryType === "income" ? 0 : 1),
+                )
+                .sort((a, b) => a.orderSeq - b.orderSeq)
+                .map((category) => {
+                  const isEditingRow = editingCategoryUid === category.uid;
+                  const firstWord = category.name.split(" ")[0];
+                  const rest = category.name.split(" ").slice(1).join(" ") || category.name;
+                  return (
+                    <div key={category.uid} className="bg-background-soft">
+                      {isEditingRow ? (
+                        <div className="flex flex-col gap-2 px-4 py-3">
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={editingIcon}
+                              onChange={(event) => setEditingIcon(event.target.value)}
+                              style={{ width: "2.75rem", flexShrink: 0 }}
+                              className="h-10 rounded-xl border border-border-subtle bg-background text-center text-lg outline-none focus:border-primary"
+                            />
+                            <input
+                              type="text"
+                              value={editingName}
+                              onChange={(event) => setEditingName(event.target.value)}
+                              className="h-10 min-w-0 flex-1 rounded-xl border border-border-subtle bg-background px-3 text-sm text-foreground outline-none focus:border-primary"
+                              placeholder="Category name"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="h-9 flex-1"
+                              onClick={handleSaveCategoryEdit}
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="h-9 flex-1"
+                              onClick={() => setEditingCategoryUid(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3 px-4 py-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-background text-lg">
+                            {firstWord}
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                            {rest}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => startEditCategory(category)}
+                            className="shrink-0 rounded-xl px-3 py-2 text-[11px] font-semibold text-primary active:bg-primary/10"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCategoryClick(category)}
+                            className="shrink-0 rounded-xl px-3 py-2 text-[11px] font-semibold text-danger active:bg-danger/10"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+              {categories.filter(
+                (c) =>
+                  !c.isDel &&
+                  c.status === 0 &&
+                  c.type === (newCategoryType === "income" ? 0 : 1),
+              ).length === 0 && (
+                <div className="flex flex-col items-center gap-1 bg-background-soft px-4 py-8 text-center">
+                  <p className="text-[12px] font-medium text-foreground">
+                    No {newCategoryType} categories
+                  </p>
+                  <p className="text-[11px] text-muted">Add one below.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-3 rounded-2xl border border-border-subtle bg-background-soft px-4 py-4">
+              <p className="text-[11px] font-medium text-muted-soft">
+                New {newCategoryType} category
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newCategoryIcon}
+                  onChange={(event) => setNewCategoryIcon(event.target.value)}
+                  style={{ width: "2.75rem", flexShrink: 0 }}
+                  className="h-11 rounded-2xl border border-border-subtle bg-background text-center text-xl outline-none focus:border-primary"
+                  placeholder="📌"
+                />
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(event) => setNewCategoryName(event.target.value)}
+                  className="h-11 min-w-0 flex-1 rounded-2xl border border-border-subtle bg-background px-3 text-sm text-foreground outline-none focus:border-primary"
+                  placeholder="Category name"
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") handleAddCategoryClick();
+                  }}
+                />
+              </div>
+              <Button
+                type="button"
+                className="h-11 w-full"
+                onClick={handleAddCategoryClick}
+                disabled={!newCategoryName.trim()}
+              >
+                Add category
+              </Button>
+            </div>
           </Card>
         </div>
       </MobileShell>
