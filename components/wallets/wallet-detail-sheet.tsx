@@ -18,6 +18,7 @@ type WalletDetailSheetProps = {
   onOpenChange: (open: boolean) => void;
   onEdit: (asset: Asset) => void;
   onAdjustBalance: (adjustment: BalanceAdjustment) => void;
+  onSetFinalBalance: (asset: Asset, targetBalance: number) => void;
   onArchive: (asset: Asset) => void;
   onRestore: (asset: Asset) => void;
   onDelete: (asset: Asset) => void;
@@ -29,10 +30,18 @@ type AdjustmentFormState = {
   direction: "add" | "subtract";
 };
 
+type FinalBalanceFormState = {
+  targetBalance: string;
+};
+
 const DEFAULT_ADJUSTMENT: AdjustmentFormState = {
   amount: "",
   note: "",
   direction: "add",
+};
+
+const DEFAULT_FINAL_BALANCE: FinalBalanceFormState = {
+  targetBalance: "",
 };
 
 export function WalletDetailSheet({
@@ -43,12 +52,16 @@ export function WalletDetailSheet({
   onOpenChange,
   onEdit,
   onAdjustBalance,
+  onSetFinalBalance,
   onArchive,
   onRestore,
   onDelete,
 }: WalletDetailSheetProps) {
   const [showAdjust, setShowAdjust] = useState(false);
+  const [adjustMode, setAdjustMode] = useState<"amount" | "final">("amount");
   const [adjustForm, setAdjustForm] = useState<AdjustmentFormState>(DEFAULT_ADJUSTMENT);
+  const [finalBalanceForm, setFinalBalanceForm] =
+    useState<FinalBalanceFormState>(DEFAULT_FINAL_BALANCE);
 
   if (!asset) return null;
 
@@ -73,6 +86,26 @@ export function WalletDetailSheet({
     });
 
     setAdjustForm(DEFAULT_ADJUSTMENT);
+    setShowAdjust(false);
+  }
+
+  function handleSetFinalBalanceSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!asset) return;
+
+    const rawTarget = Number(finalBalanceForm.targetBalance.replace(/[^0-9.-]/g, ""));
+    if (Number.isNaN(rawTarget) || rawTarget < 0) return;
+
+    const delta = rawTarget - asset.balance;
+    if (delta === 0) {
+      setFinalBalanceForm(DEFAULT_FINAL_BALANCE);
+      setShowAdjust(false);
+      return;
+    }
+
+    onSetFinalBalance(asset, rawTarget);
+    setFinalBalanceForm(DEFAULT_FINAL_BALANCE);
     setShowAdjust(false);
   }
 
@@ -133,9 +166,26 @@ export function WalletDetailSheet({
               type="button"
               variant="default"
               className="h-9"
-              onClick={() => setShowAdjust(true)}
+              onClick={() => {
+                setAdjustMode("amount");
+                setShowAdjust(true);
+              }}
             >
               Adjust balance
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-9"
+              onClick={() => {
+                setAdjustMode("final");
+                setFinalBalanceForm({
+                  targetBalance: String(asset.balance),
+                });
+                setShowAdjust(true);
+              }}
+            >
+              Set final balance
             </Button>
             <Button
               type="button"
@@ -187,6 +237,65 @@ export function WalletDetailSheet({
               </Button>
             </div>
           </div>
+        ) : adjustMode === "final" ? (
+          <form
+            onSubmit={handleSetFinalBalanceSubmit}
+            className="mb-4 flex flex-col gap-3 rounded-2xl border border-border-subtle bg-background-soft p-3 text-xs"
+          >
+            <p className="text-[11px] font-semibold text-foreground">Set final balance</p>
+            <p className="text-[10px] text-muted-soft">
+              Enter the target balance. A transaction will be created automatically based on the
+              difference.
+            </p>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="target-balance">Target balance</Label>
+              <Input
+                id="target-balance"
+                type="tel"
+                inputMode="numeric"
+                value={finalBalanceForm.targetBalance}
+                onChange={(event) =>
+                  setFinalBalanceForm((prev) => ({
+                    ...prev,
+                    targetBalance: event.target.value,
+                  }))
+                }
+                placeholder="0"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="flex-1"
+                onClick={() => {
+                  setShowAdjust(false);
+                  setFinalBalanceForm(DEFAULT_FINAL_BALANCE);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                className="flex-1"
+                disabled={(() => {
+                  const raw = Number(
+                    finalBalanceForm.targetBalance.replace(/[^0-9.-]/g, ""),
+                  );
+                  return (
+                    !finalBalanceForm.targetBalance.trim() ||
+                    Number.isNaN(raw) ||
+                    raw < 0 ||
+                    raw === asset.balance
+                  );
+                })()}
+              >
+                Apply
+              </Button>
+            </div>
+          </form>
         ) : (
           <form
             onSubmit={handleAdjustSubmit}

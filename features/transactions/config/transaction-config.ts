@@ -28,6 +28,7 @@ export const DEFAULT_INCOME_CATEGORIES: Category[] = [
   { uid: "3", name: "💵 Petty cash", type: 0, status: 0, pUid: null, orderSeq: 3, isDel: false, utime: 0 },
   { uid: "4", name: "🏅 Bonus", type: 0, status: 0, pUid: null, orderSeq: 4, isDel: false, utime: 0 },
   { uid: "5", name: "Other", type: 0, status: 0, pUid: null, orderSeq: 5, isDel: false, utime: 0 },
+  { uid: "55", name: "Difference", type: 0, status: 0, pUid: null, orderSeq: 6, isDel: false, utime: 0 },
 ];
 
 export const DEFAULT_EXPENSE_CATEGORIES: Category[] = [
@@ -43,6 +44,7 @@ export const DEFAULT_EXPENSE_CATEGORIES: Category[] = [
   { uid: "15", name: "📙 Education", type: 1, status: 0, pUid: null, orderSeq: 10, isDel: false, utime: 0 },
   { uid: "16", name: "🎁 Gift", type: 1, status: 0, pUid: null, orderSeq: 11, isDel: false, utime: 0 },
   { uid: "17", name: "Other", type: 1, status: 0, pUid: null, orderSeq: 12, isDel: false, utime: 0 },
+  { uid: "56", name: "Difference", type: 1, status: 0, pUid: null, orderSeq: 13, isDel: false, utime: 0 },
 ];
 
 export const DEFAULT_SUBCATEGORIES: Category[] = [
@@ -84,6 +86,9 @@ export const DEFAULT_SUBCATEGORIES: Category[] = [
   { uid: "53", name: "School supplies", type: 1, status: 2, pUid: "15", orderSeq: 3, isDel: false, utime: 0 },
   { uid: "54", name: "Academy", type: 1, status: 2, pUid: "15", orderSeq: 4, isDel: false, utime: 0 },
 ];
+
+export const DIFFERENCE_INCOME_CATEGORY_UID = "55";
+export const DIFFERENCE_EXPENSE_CATEGORY_UID = "56";
 
 export const ALL_DEFAULT_CATEGORIES: Category[] = [
   ...DEFAULT_INCOME_CATEGORIES,
