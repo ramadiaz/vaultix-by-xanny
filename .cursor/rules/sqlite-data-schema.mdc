@@ -1,0 +1,218 @@
+---
+description: SQLite data schema compatible with Money Manager mmbak files
+alwaysApply: true
+---
+
+# Vaultix SQLite Data Schema
+
+This project uses a SQLite schema compatible with Money Manager `.mmbak` files. The schema is created by `mmbak-export.service` and expected by `mmbak-import.service`.
+
+## Tables Overview
+
+- **ASSETGROUP**: Wallet groups (cash, bank, card, etc.).
+- **ASSETS**: Wallet/accounts used in Vaultix.
+- **CURRENCY**: Supported currencies and rates.
+- **ZCATEGORY**: Income/expense/transfer categories.
+- **INOUTCOME**: All transactions (income, expense, transfer).
+- **TAG**: Tags attached to transactions.
+- **TX_TAG**: Many-to-many link between transactions and tags.
+- **BUDGET** / **BUDGET_AMOUNT**: Budget definitions and per-period amounts.
+- **REPEATTRANSACTION**: Recurring transactions.
+- **FAVTRANSACTION**: Favorite/quick transactions.
+- **MEMO**: Notes/memos.
+- **ZETC**: Miscellaneous configuration / extra data.
+- **PHOTO**: Attachments related to transactions.
+- **android_metadata**: Locale metadata (`en_US`).
+
+## Table Details
+
+### ASSETGROUP
+
+- **Primary key**: `DEVICE_ID` (INTEGER AUTOINCREMENT)
+- **Logical key**: `uid` (TEXT, unique via `UNIQUE_IDX_ASSETGROUP_UID`)
+- **Important columns**:
+  - `ACC_GROUP_NAME` (group name)
+  - `TYPE` (group type, mapped to wallet group type)
+  - `ORDERSEQ` (ordering)
+  - `IS_DEL` (soft delete flag)
+
+### ASSETS
+
+- **Primary key**: `ID` (INTEGER AUTOINCREMENT)
+- **Logical key**: `uid` (TEXT, unique via `UNIQUE_IDX_ASSETS_UID`)
+- **Core columns**:
+  - `NIC_NAME` (wallet name)
+  - `ORDERSEQ` (ordering)
+  - `currencyUid` (FK to `CURRENCY.uid`)
+  - `groupUid` (FK to `ASSETGROUP.uid`)
+  - `CARD_DAY_FIN`, `CARD_DAY_PAY` (billing dates for card-type assets)
+  - `IS_TRANS_EXPENSE`, `IS_CARD_AUTO_PAY` (flags for behavior)
+  - `A_UTIME` (last update time)
+
+### CURRENCY
+
+- **Primary key**: `ID` (INTEGER AUTOINCREMENT)
+- **Logical key**: `uid` (VARCHAR, unique via `UNIQUE_IDX_CURRENCY_UID`)
+- **Core columns**:
+  - `NAME`, `ISO`, `MAIN_ISO`
+  - `SYMBOL`, `SYMBOL_POSITION` (`P` or `S`)
+  - `RATE` (exchange rate)
+  - `IS_MAIN_CURRENCY`, `IS_SHOW`
+  - `DECIMAL_POINT`
+  - `ORDER_SEQ`
+
+### ZCATEGORY
+
+- **Primary key**: `ID` (INTEGER AUTOINCREMENT)
+- **Logical key**: `uid` (TEXT, unique via `UNIQUE_IDX_CATEGORY_UID`)
+- **Core columns**:
+  - `NAME`
+  - `TYPE` (income/expense/etc.)
+  - `STATUS`
+  - `pUid` (parent category `uid` or `"0"`)
+  - `ORDERSEQ`
+  - `C_IS_DEL` (soft delete)
+  - `C_UTIME` (last update time)
+
+### INOUTCOME
+
+- **Primary key**: `AID` (INTEGER)
+- **Logical key**: `uid` (TEXT, unique via `UNIQUE_IDX_INOUTCOME_UID`)
+- **Core relationships**:
+  - `assetUid` → `ASSETS.uid`
+  - `ctgUid` → `ZCATEGORY.uid`
+  - `toAssetUid` → `ASSETS.uid` (for transfers)
+  - `currencyUid` → `CURRENCY.uid`
+- **Important columns**:
+  - `DO_TYPE` (transaction type; mapped to Vaultix `DoType`)
+  - `ZDATE` (transaction date, stored as VARCHAR/number)
+  - `WDATE` (write date)
+  - `ZMONEY` (amount)
+  - `IN_ZMONEY` (counter-amount for transfers)
+  - `AMOUNT_ACCOUNT` (normalized amount)
+  - `ZCONTENT` (description/memo)
+  - `MARK` (flags/starred status)
+  - `IS_DEL` (soft delete)
+  - `UTIME` (last update time)
+  - `lat`, `lng` (location)
+- **Indexes**:
+  - `INOUTCOME_IDX2` on `DO_TYPE`
+  - `INOUTCOME_IDX3` on `ZDATE`
+  - `INOUTCOME_IDX6` on `UTIME`
+  - `INOUTCOME_IDX7` on `assetUid`
+  - `INOUTCOME_IDX8` on `ctgUid`
+  - `INOUTCOME_IDX9` on `currencyUid`
+
+### TAG
+
+- **Primary key**: `id` (INTEGER AUTOINCREMENT)
+- **Logical key**: `uid` (TEXT, unique via `UNIQUE_IDX_TAG_UID`)
+- **Columns**:
+  - `name`
+  - `orderSeq`
+  - `isDel`
+  - `utime`
+
+### TX_TAG
+
+- **Primary key**: `id` (INTEGER AUTOINCREMENT)
+- **Logical key**: `uid` (TEXT, unique via `UNIQUE_IDX_TX_TAG_UID`)
+- **Relationships**:
+  - `txUid` → `INOUTCOME.uid`
+  - `tagUid` → `TAG.uid`
+- **Columns**:
+  - `objName` (optional label)
+  - `orderSeq`
+  - `isDel`
+  - `utime`
+- **Indexes**:
+  - `TX_TAG_IDX1` on `txUid`
+
+### BUDGET
+
+- **Primary key**: `ID` (INTEGER AUTOINCREMENT)
+- **Logical key**: `uid` (TEXT)
+- **Columns**:
+  - `targetUid` (points to category or asset, depending on usage)
+  - `DO_TYPE`
+  - `PERIOD_TYPE`
+  - `IS_TOTAL`
+  - `IS_DEL`
+  - `TRANSFER_TYPE`
+  - `ORDER_SEQ`
+  - `MODIFY_DATE`
+
+### BUDGET_AMOUNT
+
+- **Primary key**: `ID` (INTEGER AUTOINCREMENT)
+- **Logical key**: `uid` (TEXT)
+- **Columns**:
+  - `budgetUid` → `BUDGET.uid`
+  - `AMOUNT`
+  - `BUDGET_PERIOD`
+  - `IS_DEL`
+  - `MODIFY_DATE`
+
+### REPEATTRANSACTION
+
+- **Primary key**: `DEVICE_ID` (INTEGER AUTOINCREMENT)
+- **Logical key**: `uid` (TEXT)
+- **Columns**:
+  - `DO_TYPE`
+  - `REPEAT_TYPE`
+  - `assetUid`, `toAssetUid`, `ctgUid`, `currencyUid`
+  - `AMOUNT_SUB`
+  - `MEMO`, `PAYEE`
+  - `END_DATE`, `NEXT_DATE`
+  - `IS_DEL`, `MARK`, `USETIME`
+
+### FAVTRANSACTION
+
+- **Primary key**: `DEVICE_ID` (INTEGER AUTOINCREMENT)
+- **Logical key**: `uid` (TEXT)
+- **Columns**:
+  - `DO_TYPE`
+  - `assetUid`, `toAssetUid`, `ctgUid`
+  - `AMOUNT_SUB`
+  - `currencyUid`
+  - `MEMO`, `PAYEE`
+  - `ORDERSEQ`
+  - `IS_DEL`, `USETIME`, `MARK`
+
+### MEMO
+
+- **Primary key**: `id` (INTEGER AUTOINCREMENT)
+- **Logical key**: `uid` (TEXT)
+- **Columns**:
+  - `title`, `content`
+  - `memoTime`, `memoDate`
+  - `pinned`, `pinnedTime`
+  - `orderSeq`
+  - `color`
+  - `isDel`, `utime`
+
+### ZETC
+
+- **Primary key**: `Z_PK` (INTEGER AUTOINCREMENT)
+- **Logical key**: `uid` (TEXT)
+- **Columns**:
+  - `ZDATATYPE`, `dataTypeKey`
+  - `ZDATA`, `ZZDATA`, `ZZDATA1`, `ZZDATA2`
+  - `E_UTIME`
+  - `isDel`
+
+### PHOTO
+
+- **Primary key**: `DEVICE_ID` (INTEGER AUTOINCREMENT)
+- **Logical key**: `uid` (TEXT)
+- **Columns**:
+  - `txUid` → `INOUTCOME.uid`
+  - `FILE_SIZE`
+  - `FILE_PATH`, `FILE_NAME`
+  - `ORG_FILE_NAME`, `ORG_FILE_PATH`
+  - `IS_DEL`, `USETIME`
+
+### android_metadata
+
+- Single-column table (`locale` TEXT) used by Android; Vaultix writes `en_US` when exporting.
+
