@@ -25,7 +25,7 @@ export function StatsSummaryCards({
         <div className="relative z-10 rounded-2xl border border-white/10 bg-glass-bg/80 px-4 py-4 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <TrendingUp className="size-4 shrink-0 text-success" />
-          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-success/80">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-success">
             Income
           </span>
         </div>
@@ -39,7 +39,7 @@ export function StatsSummaryCards({
         <div className="relative z-10 rounded-2xl border border-white/10 bg-glass-bg/80 px-4 py-4 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <TrendingDown className="size-4 shrink-0 text-danger/80" />
-          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-danger/80">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-danger">
             Expense
           </span>
         </div>
@@ -53,7 +53,7 @@ export function StatsSummaryCards({
         <div className="relative z-10 rounded-2xl border border-white/10 bg-glass-bg/80 px-4 py-4 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <Minus className="size-4 shrink-0 text-muted-soft" />
-          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-soft">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground/90">
             Net
           </span>
         </div>
@@ -70,13 +70,13 @@ export function StatsSummaryCards({
 
       <div className="relative min-h-[88px] overflow-hidden rounded-2xl px-4 py-4 before:absolute before:inset-0 before:opacity-[0.12] before:[background:var(--gradient-warm)] before:content-['']">
         <div className="relative z-10 rounded-2xl border border-white/10 bg-glass-bg/80 px-4 py-4 backdrop-blur-sm">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-soft">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground/90">
           Savings
         </span>
         <p className="mt-2 text-[15px] font-bold leading-tight text-foreground tabular-nums">
           {savingsRate !== null ? `${savingsRate}%` : "—"}
         </p>
-        <p className="mt-1 text-[11px] text-muted-soft">
+        <p className="mt-1 text-[11px] text-foreground/80">
           {transactionCount} txns
         </p>
         </div>

@@ -57,7 +57,7 @@ export function MobileShell({ title, activeTab, children }: MobileShellProps) {
       </main>
 
       <nav className="relative sticky bottom-0 z-10 border-t border-glass-border bg-glass-bg-strong backdrop-blur-[var(--glass-blur-strong)] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:[background:linear-gradient(90deg,transparent_0%,var(--primary)_30%,var(--success)_70%,transparent_100%)] before:opacity-30 before:content-['']">
-        <div className="mx-auto flex max-w-xl items-center justify-between px-6 py-2.5 text-xs text-muted">
+        <div className="mx-auto flex max-w-xl items-center justify-between px-6 py-2.5 text-xs">
           <Button
             asChild
             variant={activeTab === "wallets" ? "default" : "ghost"}

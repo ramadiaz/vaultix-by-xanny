@@ -92,8 +92,8 @@ export function TransactionFilters({
               className={cn(
                 "rounded-full px-2.5 py-1 text-[11px] font-medium transition",
                 isActive
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted hover:text-foreground",
+                  ? "bg-primary/20 text-primary ring-1 ring-primary/30"
+                  : "text-foreground/85 hover:text-foreground hover:bg-glass-bg",
               )}
             >
               {opt.label}

@@ -325,7 +325,7 @@ export default function SettingsPage() {
         <div className="flex flex-col gap-4">
           <Card className="flex flex-col gap-3">
             <h3 className="text-sm font-semibold text-foreground">Export</h3>
-            <p className="text-[11px] leading-relaxed text-muted">
+            <p className="text-[11px] leading-relaxed text-foreground/80">
               Download your data as a backup file.
             </p>
             <div className="grid grid-cols-2 gap-2">
@@ -334,6 +334,7 @@ export default function SettingsPage() {
               </Button>
               <Button
                 type="button"
+                variant="secondary"
                 onClick={handleExportMmbak}
                 className="h-9"
                 disabled={isExportingMmbak}
@@ -354,7 +355,7 @@ export default function SettingsPage() {
             <h3 className="text-sm font-semibold text-foreground">
               Backup Sync
             </h3>
-            <p className="text-[11px] leading-relaxed text-muted">
+            <p className="text-[11px] leading-relaxed text-foreground/80">
               Backup and restore your data to the cloud.
             </p>
             <div className="flex flex-col gap-2">
@@ -473,7 +474,7 @@ export default function SettingsPage() {
             <h3 className="text-sm font-semibold text-foreground">Import</h3>
 
             <div className="flex flex-col gap-2">
-              <span className="text-[11px] font-medium text-muted-soft">Import mode</span>
+              <span className="text-[11px] font-medium text-foreground/80">Import mode</span>
               <div className="flex gap-1">
                 <button
                   type="button"
@@ -481,8 +482,8 @@ export default function SettingsPage() {
                   className={cn(
                     "flex-1 rounded-xl px-3 py-2 text-center text-[11px] font-medium transition",
                     importMode === "merge"
-                      ? "bg-primary/15 text-primary ring-1 ring-primary/30"
-                      : "bg-background-soft text-muted",
+                      ? "bg-primary/20 text-primary ring-1 ring-primary/40"
+                      : "bg-glass-bg border border-glass-border text-foreground/90",
                   )}
                 >
                   Merge (keep existing)
@@ -493,8 +494,8 @@ export default function SettingsPage() {
                   className={cn(
                     "flex-1 rounded-xl px-3 py-2 text-center text-[11px] font-medium transition",
                     importMode === "replace"
-                      ? "bg-danger/15 text-danger ring-1 ring-danger/30"
-                      : "bg-background-soft text-muted",
+                      ? "bg-danger/20 text-danger ring-1 ring-danger/40"
+                      : "bg-glass-bg border border-glass-border text-foreground/90",
                   )}
                 >
                   Replace (overwrite all)
@@ -503,7 +504,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <p className="text-[11px] leading-relaxed text-muted">
+              <p className="text-[11px] leading-relaxed text-foreground/80">
                 Money Manager backup (.mmbak):
               </p>
               <input
@@ -524,7 +525,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <p className="text-[11px] leading-relaxed text-muted">
+              <p className="text-[11px] leading-relaxed text-foreground/80">
                 Money Manager Excel export (.xls/.xlsx):
               </p>
               <input
@@ -545,7 +546,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <p className="text-[11px] leading-relaxed text-muted">
+              <p className="text-[11px] leading-relaxed text-foreground/80">
                 Vaultix backup file (.json):
               </p>
               <input
@@ -569,7 +570,7 @@ export default function SettingsPage() {
           {importStatus.state === "loading" && (
             <Card className="flex flex-col items-center justify-center gap-3 py-8">
               <LoadingSpinner size="lg" />
-              <p className="text-xs font-medium text-muted">
+              <p className="text-xs font-medium text-foreground/80">
                 Parsing .mmbak file
               </p>
             </Card>
@@ -580,31 +581,31 @@ export default function SettingsPage() {
               <h3 className="text-sm font-semibold text-foreground">
                 Import preview
               </h3>
-              <p className="text-[11px] text-muted">
+              <p className="text-[11px] text-foreground/80">
                 Source: <span className="font-medium text-foreground">{sourceLabel[importStatus.source]}</span>
               </p>
               <div className="grid grid-cols-2 gap-2 text-[11px]">
                 <div className="rounded-xl bg-background-soft px-3 py-2">
-                  <span className="text-muted-soft">Wallets</span>
+                  <span className="text-foreground/75">Wallets</span>
                   <p className="font-semibold text-foreground">
                     {importStatus.result.summary.totalAssets}
                   </p>
                 </div>
                 <div className="rounded-xl bg-background-soft px-3 py-2">
-                  <span className="text-muted-soft">Transactions</span>
+                  <span className="text-foreground/75">Transactions</span>
                   <p className="font-semibold text-foreground">
                     {importStatus.result.summary.totalTransactions}
                   </p>
                 </div>
                 <div className="rounded-xl bg-background-soft px-3 py-2">
-                  <span className="text-muted-soft">Categories</span>
+                  <span className="text-foreground/75">Categories</span>
                   <p className="font-semibold text-foreground">
                     {importStatus.result.summary.totalCategories}
                   </p>
                 </div>
                 {importStatus.result.summary.skippedTransferIn > 0 && (
                   <div className="rounded-xl bg-background-soft px-3 py-2">
-                    <span className="text-muted-soft">Skipped (Transfer-In)</span>
+                    <span className="text-foreground/75">Skipped (Transfer-In)</span>
                     <p className="font-semibold text-foreground">
                       {importStatus.result.summary.skippedTransferIn}
                     </p>
@@ -612,7 +613,7 @@ export default function SettingsPage() {
                 )}
               </div>
 
-              <p className="text-[11px] text-muted">
+              <p className="text-[11px] text-foreground/80">
                 Mode:{" "}
                 <span className="font-medium text-foreground">
                   {importMode === "merge" ? "Merge" : "Replace"}
@@ -649,7 +650,7 @@ export default function SettingsPage() {
               <p className="text-[12px] font-medium text-success">
                 {importStatus.message}
               </p>
-              <p className="mt-1 text-[11px] text-muted">
+              <p className="mt-1 text-[11px] text-foreground/80">
                 Reload the page to see your imported data.
               </p>
             </Card>
@@ -668,7 +669,7 @@ export default function SettingsPage() {
             <Button
               type="button"
               variant="outline"
-              className="h-9 text-danger"
+              className="h-9 border-danger/40 text-danger hover:bg-danger/10 hover:border-danger/60"
               onClick={signOut}
             >
               Sign out
@@ -679,7 +680,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-foreground">Categories</h3>
               {!isCategoriesLoading && (
-                <span className="text-[11px] text-muted">
+                <span className="text-[11px] text-foreground/80">
                   {categories.filter((c) => !c.isDel && c.status === 0).length} total
                 </span>
               )}
@@ -697,7 +698,7 @@ export default function SettingsPage() {
                       ? t === "income"
                         ? "bg-success/15 text-success"
                         : "bg-danger/15 text-danger"
-                      : "text-muted",
+                      : "text-foreground/85",
                   )}
                 >
                   {t}
@@ -796,13 +797,13 @@ export default function SettingsPage() {
                   <p className="text-[12px] font-medium text-foreground">
                     No {newCategoryType} categories
                   </p>
-                  <p className="text-[11px] text-muted">Add one below.</p>
+                  <p className="text-[11px] text-foreground/80">Add one below.</p>
                 </div>
               )}
             </div>
 
             <div className="flex flex-col gap-3 rounded-2xl border border-border-subtle bg-background-soft px-4 py-4">
-              <p className="text-[11px] font-medium text-muted-soft">
+              <p className="text-[11px] font-medium text-foreground/80">
                 New {newCategoryType} category
               </p>
               <div className="flex items-center gap-2">

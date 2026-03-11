@@ -56,13 +56,13 @@ export function AuthGate({ children }: AuthGateProps) {
       <Card className="w-full max-w-xs">
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-soft">
+            <span className="text-xs font-medium uppercase tracking-[0.18em] text-foreground/80">
               Vaultix
             </span>
             <h1 className="text-lg font-semibold text-foreground">
               {mode === "login" ? "Sign in" : "Create account"}
             </h1>
-            <p className="mt-1 text-[11px] leading-relaxed text-muted">
+            <p className="mt-1 text-[11px] leading-relaxed text-foreground/80">
               Sign in to keep your wallets, transactions, and backups synced.
             </p>
           </div>
@@ -75,7 +75,7 @@ export function AuthGate({ children }: AuthGateProps) {
               onChange={(e) => setUsername(e.target.value)}
               required
               autoComplete="username"
-              className="h-10 w-full rounded-2xl border border-glass-border bg-glass-bg px-3 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30"
+              className="h-10 w-full rounded-2xl border border-glass-border bg-glass-bg px-3 text-sm text-foreground placeholder:text-foreground/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30"
             />
             <input
               type="password"
@@ -84,7 +84,7 @@ export function AuthGate({ children }: AuthGateProps) {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete={mode === "login" ? "current-password" : "new-password"}
-              className="h-10 w-full rounded-2xl border border-glass-border bg-glass-bg px-3 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30"
+              className="h-10 w-full rounded-2xl border border-glass-border bg-glass-bg px-3 text-sm text-foreground placeholder:text-foreground/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30"
             />
             {error && (
               <p className="text-xs text-danger">{error}</p>
@@ -109,7 +109,7 @@ export function AuthGate({ children }: AuthGateProps) {
               setMode((m) => (m === "login" ? "register" : "login"));
               setError(null);
             }}
-            className="text-xs text-muted hover:text-foreground"
+            className="text-xs text-foreground/80 hover:text-foreground"
           >
             {mode === "login"
               ? "Don't have an account? Register"
