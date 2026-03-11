@@ -229,6 +229,7 @@ export function useTransactions(
 
   async function persist(next: Transaction[]) {
     await storeTransactions(next);
+    window.dispatchEvent(new CustomEvent("vaultix:data-reload"));
   }
 
   function addIncomeExpense(txn: Transaction) {

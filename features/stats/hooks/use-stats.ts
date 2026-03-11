@@ -33,6 +33,13 @@ export function useStats(): UseStatsValue {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [period, setPeriod] = useState<StatPeriod>("month");
+  const [reloadTrigger, setReloadTrigger] = useState(0);
+
+  useEffect(() => {
+    const handler = () => setReloadTrigger((t) => t + 1);
+    window.addEventListener("vaultix:data-reload", handler);
+    return () => window.removeEventListener("vaultix:data-reload", handler);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -53,7 +60,7 @@ export function useStats(): UseStatsValue {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [reloadTrigger]);
 
   const { from, to } = useMemo(() => getPeriodRange(period), [period]);
 

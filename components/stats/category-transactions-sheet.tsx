@@ -16,6 +16,8 @@ type CategoryTransactionsSheetProps = {
   assets: Asset[];
   categories: Category[];
   getCurrencyIso: (uid: string) => string;
+  onEdit: (transaction: DisplayTransaction) => void;
+  onDelete: (transaction: DisplayTransaction) => void;
 };
 
 export function CategoryTransactionsSheet({
@@ -27,6 +29,8 @@ export function CategoryTransactionsSheet({
   assets,
   categories,
   getCurrencyIso,
+  onEdit,
+  onDelete,
 }: CategoryTransactionsSheetProps) {
   const title =
     categoryItem != null
@@ -50,8 +54,8 @@ export function CategoryTransactionsSheet({
             assets={assets}
             categories={categories}
             getCurrencyIso={getCurrencyIso}
-            onEdit={() => {}}
-            onDelete={() => {}}
+            onEdit={onEdit}
+            onDelete={onDelete}
           />
         </div>
       </SheetContent>
