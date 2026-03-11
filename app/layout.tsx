@@ -4,6 +4,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { AuthProvider } from "@/features/auth/hooks/use-auth";
 import { HeroUIRootProvider } from "@/components/theme/heroui-provider";
+import { SyncProvider } from "@/features/sync/context/sync-provider";
+import { SyncManager } from "@/features/sync/components/sync-manager";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +34,12 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <HeroUIRootProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              <SyncProvider>
+              <SyncManager />
+              {children}
+            </SyncProvider>
+            </AuthProvider>
           </HeroUIRootProvider>
         </ThemeProvider>
       </body>

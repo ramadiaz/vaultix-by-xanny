@@ -1,12 +1,11 @@
- "use client";
+"use client";
 
 import { ReactNode } from "react";
 import Link from "next/link";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { useBackupSync } from "@/features/backup/hooks/use-backup-sync";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useSync } from "@/features/sync/context/sync-provider";
 
 type MobileTab = "wallets" | "transactions" | "stats" | "settings";
 
@@ -18,7 +17,7 @@ type MobileShellProps = {
 
 export function MobileShell({ title, activeTab, children }: MobileShellProps) {
   const { user } = useAuth();
-  const { sync, state: syncState } = useBackupSync();
+  const { sync, state: syncState } = useSync();
   const isSyncing = syncState.status === "syncing";
 
   return (
@@ -41,7 +40,7 @@ export function MobileShell({ title, activeTab, children }: MobileShellProps) {
             aria-label="Sync"
           >
             {isSyncing ? (
-              <LoadingSpinner size="sm" />
+              <RefreshCw className="h-5 w-5 animate-[spinner-rotate_0.8s_linear_infinite]" />
             ) : (
               <RefreshCw className="h-5 w-5" />
             )}

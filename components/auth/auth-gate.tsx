@@ -2,7 +2,6 @@
 
 import { ReactNode, useState } from "react";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { SyncManager } from "@/features/sync/components/sync-manager";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AppLoadingScreen } from "@/components/loading/app-loading-screen";
@@ -24,12 +23,7 @@ export function AuthGate({ children }: AuthGateProps) {
   }
 
   if (user) {
-    return (
-      <>
-        <SyncManager />
-        {children}
-      </>
-    );
+    return <>{children}</>;
   }
 
   async function handleSubmit(e: React.FormEvent) {

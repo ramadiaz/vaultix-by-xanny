@@ -6,7 +6,7 @@ import { MobileShell } from "@/components/layout/mobile-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { useBackupSync } from "@/features/backup/hooks/use-backup-sync";
+import { useSync } from "@/features/sync/context/sync-provider";
 import { exportVaultixBackup } from "@/features/import-export/services/vaultix-export.service";
 import { exportAsMmbak } from "@/features/import-export/services/mmbak-export.service";
 import {
@@ -43,7 +43,7 @@ export default function SettingsPage() {
     state: backupState,
     sync: syncToBackup,
     clearState: clearBackupState,
-  } = useBackupSync();
+  } = useSync();
   const excelInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
   const mmbakInputRef = useRef<HTMLInputElement>(null);

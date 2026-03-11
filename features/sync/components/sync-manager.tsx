@@ -2,14 +2,14 @@
 
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { useBackupSync } from "@/features/backup/hooks/use-backup-sync";
+import { useSync } from "@/features/sync/context/sync-provider";
 
 const DATA_CHANGED_EVENT = "vaultix:data-changed";
 const DEBOUNCE_MS = 2500;
 
 export function SyncManager() {
   const { user } = useAuth();
-  const { sync } = useBackupSync();
+  const { sync } = useSync();
   const isSyncingRef = useRef(false);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
