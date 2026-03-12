@@ -21,7 +21,8 @@ export async function getStoredTransactions(): Promise<Transaction[]> {
     `SELECT uid, assetUid, ctgUid, toAssetUid, ZCONTENT as content, ZDATE as date, WDATE as writeDate, 
             DO_TYPE as doType, ZMONEY as money, IN_ZMONEY as inMoney, txUidTrans, txUidFee, IS_DEL as isDel, 
             UTIME as utime, currencyUid, AMOUNT_ACCOUNT as amountAccount, MARK as mark, paid, lat, lng 
-     FROM INOUTCOME`,
+     FROM INOUTCOME
+     ORDER BY ZDATE DESC, UTIME DESC`,
   );
 
   if (result.length === 0) {
