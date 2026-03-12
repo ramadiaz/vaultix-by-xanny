@@ -6,6 +6,7 @@ import { AuthProvider } from "@/features/auth/hooks/use-auth";
 import { HeroUIRootProvider } from "@/components/theme/heroui-provider";
 import { SyncProvider } from "@/features/sync/context/sync-provider";
 import { SyncManager } from "@/features/sync/components/sync-manager";
+import { Analytics } from "@vercel/analytics/next"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -104,6 +105,7 @@ export default function RootLayout({
             </AuthProvider>
           </HeroUIRootProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
